@@ -3,11 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Linq;
+using System.Runtime.ConstrainedExecution;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using static Homeworks_otus.ToDoItem;
 
 namespace Homeworks_otus
 {
@@ -15,6 +17,8 @@ namespace Homeworks_otus
     {
         public const int min = 1;
         public const int max = 100;
+        public static ToDoUser _user = null;
+        public static List<ToDoItem> _toDoItems = new List<ToDoItem>();
         public static void Main(string[] args)
         {
             try
@@ -48,10 +52,9 @@ namespace Homeworks_otus
                 Console.WriteLine($"Произошла непредвиденная ошибка: {ex.GetType().FullName} | {ex.Message} | {ex.StackTrace} | {ex.InnerException}");
             }
         }
-
         public static void Commands(int parsedTaskCountLimit, int parsedTaskLengthLimit)
         {
-            Console.WriteLine("Вам доступны команды /start, /help, /info, /addtask, /showtasks, /removetask, /exit. Выбирайте :)");
+            Console.WriteLine("Вам доступны команды /start, /help, /info, /addtask, /showtasks, /removetask, /completetask, /showalltasks, /exit. Выбирайте :)");
             bool IsRun = true;
             do
             {
@@ -85,35 +88,35 @@ namespace Homeworks_otus
                 {
                     RemoveTask();
                 }
+                else if (line.Equals("/completetask"))
+                {
+                    CompleteTask();
+                }
+                else if (line.Equals("/showalltasks"))
+                {
+                    ShowAllTasks();
+                }
                 else if (line.Contains("/exit"))
                 {
                     IsRun = false;
                 }
                 else
                 {
-                    switch (Name)
-                    {
-                        case "":
-                            Console.WriteLine("Простите, но пока что я Вас не поняла :(");
-                            break;
-                        default:
-                            Console.WriteLine($"Простите, {Name}, но пока что я Вас не поняла :(");
-                            break;
-                    }
+                    string strError = "простите, но пока что я Вас не поняла :(";
+                    Console.WriteLine(ValidateString(_user.TelegramUserName) ? strError : _user.TelegramUserName + ", " + strError);
                 }
             }
             while (IsRun == true);
         }
 
-        #region Homework2
-        public static string Name = "";
+        #region homework2
         public static void Start()
         {
-            Console.WriteLine("Пожалуйста, введите свое имя");
-            Name = Console.ReadLine();
-            Console.WriteLine($"{Name}, теперь Вам доступна команда /echo. Введите команду /echo и любой текст");
-        }
+            var userName = GetUserName();
+            _user = new ToDoUser(userName);
 
+            Console.WriteLine($"Привет, {_user.TelegramUserName}! Чем могу помочь?");
+        }
         public static void Echo(string echoConsole)
         {
             if (ValidateString(echoConsole.Replace("/echo", "")) == false)
@@ -126,40 +129,38 @@ namespace Homeworks_otus
                 Console.WriteLine("Строка пустая или содержит значение NULL");
             }
         }
-
         public static void Help()
         {
             string strHelp = "в этой программе следующий список доступных команд: /start, /echo (доступна после внесения имени в команде /start)," +
                         "/help, /info, /exit.\r\n" +
-                        "/start - программа просит Вас ввести своё имя.\r\n" +
+                        "/start - программа просит Вас ввести своё имя, также сохраняет Ваш Id и дату регистрации.\r\n" +
                         "/echo - при вводе этой команды с аргументом (например, /echo Hello), программа возвращает введенный текст \r\n" +
                         "(в данном примере \"Hello\").\r\n" +
                         "/help - отображает краткую справочную информацию о том, как пользоваться программой. \r\n" +
                         "/info - предоставляет информацию о версии программы и дате её создания.\r\n" +
                         "/addtask - позволяет добавлять задачи в список (по одной).\r\n" +
-                        "/showtasks - отображает список всех добавленных задач.\r\n" +
+                        "/showtasks - отображает список всех добавленных задач со статусом Active.\r\n" +
                         "/removetask - позволяет удалять задачи по номеру в общем списке.\r\n" +
+                        "/completetask - позволяет ставить отметку о выполнении задачи по ее Id.\r\n" +
+                        "/showalltasks - отображает список всех добавленных задач.\r\n" +
                         "/exit - программа заканчивает свою работу.";
-            Console.WriteLine(ValidateString(Name) ? strHelp : Name + ", " + strHelp);
+            Console.WriteLine(ValidateString(_user.TelegramUserName) ? strHelp : _user.TelegramUserName + ", " + strHelp);
         }
-
         public static void Info()
         {
             string strInfo = "программа v3 создана 23.12.2025";
-            Console.WriteLine(ValidateString(Name) ? strInfo : Name + ", " + strInfo);
+            Console.WriteLine(ValidateString(_user.TelegramUserName) ? strInfo : _user.TelegramUserName + ", " + strInfo);
         }
         #endregion
 
-        #region Homework3
-        public static List<string> tasks = new List<string>();
-
+        #region homework3
         public static void AddTask(int parsedTaskCountLimit, int parsedTaskLengthLimit)
         {
             string strAddTask = "пожалуйста, введите описание задачи";
-            Console.WriteLine(ValidateString(Name) ? strAddTask : Name + ", " + strAddTask);
+            Console.WriteLine(ValidateString(_user.TelegramUserName) ? strAddTask : _user.TelegramUserName + ", " + strAddTask);
             string task = Console.ReadLine();
 
-            if (tasks.Count >= parsedTaskCountLimit)
+            if (_toDoItems.Count >= parsedTaskCountLimit)
             {
                 throw new TaskCountLimitException(parsedTaskCountLimit);
             }
@@ -176,10 +177,11 @@ namespace Homeworks_otus
 
             else
             {
-                if (!tasks.Contains(task))
+                if (!_user.TelegramUserName.Contains(task))
                 {
-                    tasks.Add(task);
-                    Console.WriteLine($"Задача \"{task}\" добавлена");
+                    ToDoItem _ToDoItem = new ToDoItem(_user, task);
+                    _toDoItems.Add(_ToDoItem);
+                    Console.WriteLine($"Задача \"{ task}\" добавлена");
                 }
                 else
                 {
@@ -187,30 +189,33 @@ namespace Homeworks_otus
                 }
             }
         }
-
         public static void ShowTasks()
         {
-            if (tasks.Count > 0)
+            if (_toDoItems.Count > 0)
             {
-                for (int i = 0; i < tasks.Count; i++)
+                int a = 1;
+                for (int i = 0; i < _toDoItems.Count; i++)
                 {
-                    Console.WriteLine($"{i + 1}. {tasks[i]}");
+                    if (_toDoItems[i].State == ToDoItemState.Active)
+                    {
+                        Console.WriteLine($"{a}. {_toDoItems[i].Name} - {_toDoItems[i].CreatedAt} - {_toDoItems[i].Id}");
+                        a++;
+                    }
                 }
             }
 
             else
             {
                 string strEmptyTasks = "кажется, список задач пуст";
-                Console.WriteLine(ValidateString(Name) ? strEmptyTasks : Name + ", " + strEmptyTasks);
+                Console.WriteLine(ValidateString(_user.TelegramUserName) ? strEmptyTasks : _user.TelegramUserName + ", " + strEmptyTasks);
             }
         }
-
         public static void RemoveTask()
         {
-            if (tasks.Count > 0)
+            if (_toDoItems.Count > 0)
             {
                 string strYourTasks = "Ваш список задач:";
-                Console.WriteLine(ValidateString(Name) ? strYourTasks : Name + ", " + strYourTasks);
+                Console.WriteLine(ValidateString(_user.TelegramUserName) ? strYourTasks : _user.TelegramUserName + ", " + strYourTasks);
 
                 ShowTasks();
 
@@ -218,7 +223,7 @@ namespace Homeworks_otus
                 bool successfulParse = int.TryParse(Console.ReadLine(), out int taskToDelete);
                 if (successfulParse == true)
                 {
-                    while (taskToDelete > tasks.Count)
+                    while (taskToDelete > _toDoItems.Count)
                     {
                         Console.WriteLine("Введен некорректный номер задачи. Пожалуйста, попробуйте еще раз");
                         successfulParse = int.TryParse(Console.ReadLine(), out taskToDelete);
@@ -229,11 +234,11 @@ namespace Homeworks_otus
                         }
                     }
 
-                    for (int i = 0; i < tasks.Count; i++)
+                    for (int i = 0; i < _toDoItems.Count; i++)
                     {
                         if (i == taskToDelete - 1)
                         {
-                            tasks.RemoveAt(i);
+                            _toDoItems.RemoveAt(i); ;
                             Console.WriteLine("Задача удалена из списка");
                         }
                     }
@@ -248,12 +253,69 @@ namespace Homeworks_otus
             else
             {
                 string strEmptyTasks = "кажется, список задач пуст";
-                Console.WriteLine(ValidateString(Name) ? strEmptyTasks : Name + ", " + strEmptyTasks);
+                Console.WriteLine(ValidateString(_user.TelegramUserName) ? strEmptyTasks : _user.TelegramUserName + ", " + strEmptyTasks);
             }
         }
         #endregion
 
-        #region Homework4
+        #region homework5
+        public static void CompleteTask()
+        {
+            if (_toDoItems.Count > 0)
+            {
+                Console.WriteLine("Введите Id задачи для проставления статуса \"Выполнена\"");
+                string completeTask = Console.ReadLine();
+
+                if (ValidateString(completeTask) == false)
+                {
+                    for (int i = 0; i < _toDoItems.Count; i++)
+                    {
+                        if (_toDoItems[i].Id.ToString() == completeTask)
+                        {
+                            _toDoItems[i].State = ToDoItemState.Completed;
+                            _toDoItems[i].StateChangedAt = DateTime.UtcNow;
+                        }
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Вы ввели пробелы или пустую строку");
+                }
+                Console.WriteLine("Задача выполнена");
+            }
+
+            else
+            {
+                string strEmptyTasks = "кажется, список задач пуст";
+                Console.WriteLine(ValidateString(_user.TelegramUserName) ? strEmptyTasks : _user.TelegramUserName + ", " + strEmptyTasks);
+            }
+        }
+        public static void ShowAllTasks()
+        {
+            if (_toDoItems.Count > 0)
+            {
+                for (int i = 0; i < _toDoItems.Count; i++)
+                {
+                    if (_toDoItems[i].State == ToDoItemState.Completed)
+                    {
+                        Console.WriteLine($"{i + 1}. |{_toDoItems[i].State} - {_toDoItems[i].StateChangedAt}| {_toDoItems[i].Name} - {_toDoItems[i].CreatedAt} - {_toDoItems[i].Id}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"{i + 1}. |{_toDoItems[i].State}| {_toDoItems[i].Name} - {_toDoItems[i].CreatedAt} - {_toDoItems[i].Id}");
+                    }
+                }
+            }
+
+            else
+            {
+                string strEmptyTasks = "кажется, список задач пуст";
+                Console.WriteLine(ValidateString(_user.TelegramUserName) ? strEmptyTasks : _user.TelegramUserName + ", " + strEmptyTasks);
+            }
+        }
+        #endregion
+
+        #region homework4
         public static int ParseAndValidateInt(string? str, int min, int max)
         {
             int parsedStr;
@@ -282,9 +344,23 @@ namespace Homeworks_otus
             return strIsNullOrWhiteSpace;
         }
         #endregion
+
+        #region homework5
+        static string GetUserName()
+        {
+            string? name;
+            do
+            {
+                Console.WriteLine("Пожалуйста, введите свое имя");
+                name = Console.ReadLine();
+            }
+            while (string.IsNullOrWhiteSpace(name));
+            return name;
+        }
+        #endregion
     }
 
-    #region Homework4
+    #region homework4
     public class TaskCountLimitException : Exception
     {
         public TaskCountLimitException(int taskCountLimit)
@@ -309,5 +385,56 @@ namespace Homeworks_otus
         }
     }
     #endregion
+
+    #region homework5
+    public class ToDoUser
+    {
+        private Guid _userId;
+        public string _telegramUserName;
+        private DateTime _registeredAt;
+        public ToDoUser(string telegramUserName)
+        {
+            _telegramUserName = telegramUserName;
+            _userId = Guid.NewGuid();
+            _registeredAt = DateTime.UtcNow;
+        }
+        public Guid UserId
+        {
+            get { return _userId; }
+        }
+        public string TelegramUserName
+        {
+            get { return _telegramUserName; }
+        }
+        public DateTime RegisteredAt
+        {
+            get { return _registeredAt; }
+        }
+    }
+
+    public class ToDoItem
+    {
+        public enum ToDoItemState
+        {
+            Active, Completed
+        }
+
+        public Guid Id { get; set; }
+        public ToDoUser User { get; set; }
+        public string Name { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public ToDoItemState State { get; set; }
+        public DateTime? StateChangedAt { get; set; }
+        public ToDoItem(ToDoUser user, string name)
+        {
+            Id = Guid.NewGuid();
+            User = user;
+            Name = name;
+            CreatedAt = DateTime.UtcNow;
+            State = ToDoItemState.Active;
+        }
+    }
+    #endregion
 }
+
 
