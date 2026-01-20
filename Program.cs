@@ -147,7 +147,7 @@ namespace Homeworks_otus
                 {
                     botClient.SendMessage(update.Message.Chat, $"{Info()}");
                 }
-                else if (update.Message.Text.Equals("/addtask") && _userService.GetUser(update.Message.From.Id) != null)
+                else if (update.Message.Text.Contains("/addtask") && _userService.GetUser(update.Message.From.Id) != null)
                 {
                     _toDoService.Add(_userService.GetUser(update.Message.From.Id), update.Message.Text.Replace("/addtask", "").Trim());
                     botClient.SendMessage(update.Message.Chat, $"Задача добавлена");
@@ -156,15 +156,15 @@ namespace Homeworks_otus
                 {
                     ShowTasks(botClient, update);
                 }
-                else if (update.Message.Text.Equals("/removetask") && _userService.GetUser(update.Message.From.Id) != null)
+                else if (update.Message.Text.Contains("/removetask") && _userService.GetUser(update.Message.From.Id) != null)
                 {
                     //_toDoService.Delete(_userService.GetUser(update.Message.From.Id), update.Message.Text.Replace("/removetask", "").Trim());
                     //botClient.SendMessage(update.Message.Chat, $"Задача удалена");
                 }
-                else if (update.Message.Text.Equals("/completetask") && _userService.GetUser(update.Message.From.Id) != null)
+                else if (update.Message.Text.Contains("/completetask") && _userService.GetUser(update.Message.From.Id) != null)
                 {
                     //int.TryParse(Console.ReadLine(), out int taskToDelete);
-                    _toDoService.MarkCompleted(Guid.Parse(update.Message.Text.Replace("/completetask", "").Trim(), out Guid guidCompleted));
+                    //_toDoService.MarkCompleted(Guid.Parse(update.Message.Text.Replace("/completetask", "").Trim(), out Guid guidCompleted));
                     botClient.SendMessage(update.Message.Chat, $"Задача отмечена как выполненная");
                 }
                 else if (update.Message.Text.Equals("/showalltasks") && _userService.GetUser(update.Message.From.Id) != null)
@@ -218,8 +218,8 @@ namespace Homeworks_otus
         }
         public string Help()
         {
-            string strHelp = "в этой программе следующий список доступных команд: /start, /echo (доступна после внесения имени в команде /start)," +
-                        "/help, /info, /exit.\r\n" +
+            string strHelp = "в этой программе следующий список доступных команд: /start, /help, " +
+                        "/info, /exit.\r\n" +
                         "/start - программа просит Вас ввести своё имя, также сохраняет Ваш Id и дату регистрации.\r\n" +
                         "/help - отображает краткую справочную информацию о том, как пользоваться программой. \r\n" +
                         "/info - предоставляет информацию о версии программы и дате её создания.\r\n" +
