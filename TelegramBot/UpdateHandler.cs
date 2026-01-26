@@ -23,7 +23,7 @@ namespace Homeworks_otus.Core.Services
 
         private readonly IUserService _userService;
         private readonly IToDoService _toDoService;
-        public UpdateHandler(IUserService userService, IToDoService toDoService, IUserRepository userRepository)
+        public UpdateHandler(IUserService userService, IToDoService toDoService)
         {
             _userService = userService;
             _toDoService = toDoService;
