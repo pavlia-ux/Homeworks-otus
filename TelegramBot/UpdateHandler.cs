@@ -38,16 +38,14 @@ namespace Homeworks_otus.Core.Services
 
         int ParseAndValidateInt(string? str, string max)
         {
-            //if (!(int.TryParse(str, out int number) && number >= _toDoService.Min && number <= _toDoService.Max)) throw new ArgumentException($"Это должно быть число от {_toDoService.Min} до {_toDoService.Max}");
-            //return number;
             if (max == "MaxLength")
             {
-                if (!(int.TryParse(str, out int number) && number <= _toDoService.MaxLength)) throw new ArgumentException($"Длина задачи не должна превышать {_toDoService.MaxLength}");
+                if (!(int.TryParse(str, out int number) && number >= 1 && number <= _toDoService.MaxLength)) throw new ArgumentException($"Длина задачи не должна превышать {_toDoService.MaxLength} и быть меньше 1");
                 return number;
             }
             else 
             {
-                if (!(int.TryParse(str, out int number) && number <= _toDoService.MaxQuantity)) throw new ArgumentException($"Количество задач не должно превышать {_toDoService.MaxQuantity}");
+                if (!(int.TryParse(str, out int number) && number >= 1 && number <= _toDoService.MaxQuantity)) throw new ArgumentException($"Количество задач не должно превышать {_toDoService.MaxQuantity} и быть меньше 1");
                 return number;
             }
         }
