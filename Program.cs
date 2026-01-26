@@ -22,6 +22,10 @@ namespace Homeworks_otus
             {
                 var handler = new UpdateHandler(new UserService(), new ToDoService());
                 var botClient = new ConsoleBotClient();
+                Console.Write("Введите максимально допустимую длину задачи: ");
+                handler.SetMaxLengthLimit(Console.ReadLine());
+                Console.Write("Введите максимально допустимое количество задач: ");
+                handler.SetMaxQuantityLimit(Console.ReadLine());
                 botClient.StartReceiving(handler);
             }
             catch (Exception ex)

@@ -11,9 +11,13 @@ namespace Homeworks_otus.Core.Services
 {
     public class ToDoService : IToDoService
     {
-        public const int min = 1;
-        public const int max = 100;
+        int maxLength = 100;
+        int maxQuantity = 100;
+        public int MaxLength { get => maxLength; set => maxLength = value; }
+        public int MaxQuantity { get => maxQuantity; set => maxQuantity = value; }
+
         private readonly List<ToDoItem> _toDoItems = new List<ToDoItem>();
+        
         public IReadOnlyList<ToDoItem> GetAllByUserId(Guid userId)
         {
             IReadOnlyList<ToDoItem> allToDoItems = _toDoItems.FindAll(n => n.User.UserId == userId);
@@ -27,15 +31,15 @@ namespace Homeworks_otus.Core.Services
         public ToDoItem Add(ToDoUser user, string name)
         {
             ToDoItem toDoItem = new ToDoItem(user, name);
-
-            if (_toDoItems.Count > max)
+            
+            if (_toDoItems.Count >= MaxQuantity)
             {
-                throw new TaskCountLimitException(max);
+                throw new TaskCountLimitException(MaxQuantity);
             }
 
-            if (toDoItem.Name.Length > max)
+            if (toDoItem.Name.Length > MaxLength)
             {
-                throw new TaskLengthLimitException(toDoItem.Name.Length, max);
+                throw new TaskLengthLimitException(toDoItem.Name.Length, MaxLength);
             }
 
             if (IsDuplicate(user, toDoItem))

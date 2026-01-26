@@ -27,6 +27,30 @@ namespace Homeworks_otus.Core.Services
             _userService = userService;
             _toDoService = toDoService;
         }
+        public void SetMaxLengthLimit(string? str)
+        {
+            _toDoService.MaxLength = ParseAndValidateInt(str, "MaxLength");
+        }
+        public void SetMaxQuantityLimit(string? str)
+        {
+            _toDoService.MaxQuantity = ParseAndValidateInt(str, "MaxQuantity");
+        }
+
+        int ParseAndValidateInt(string? str, string max)
+        {
+            //if (!(int.TryParse(str, out int number) && number >= _toDoService.Min && number <= _toDoService.Max)) throw new ArgumentException($"Это должно быть число от {_toDoService.Min} до {_toDoService.Max}");
+            //return number;
+            if (max == "MaxLength")
+            {
+                if (!(int.TryParse(str, out int number) && number <= _toDoService.MaxLength)) throw new ArgumentException($"Длина задачи не должна превышать {_toDoService.MaxLength}");
+                return number;
+            }
+            else 
+            {
+                if (!(int.TryParse(str, out int number) && number <= _toDoService.MaxQuantity)) throw new ArgumentException($"Количество задач не должно превышать {_toDoService.MaxQuantity}");
+                return number;
+            }
+        }
 
         public void HandleUpdateAsync(ITelegramBotClient botClient, Update update)
         {
