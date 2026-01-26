@@ -9,7 +9,11 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+
+using Homeworks_otus.Core.DataAccess;
 using Homeworks_otus.Core.Services;
+using Homeworks_otus.Infrastructure.DataAccess;
+
 using Otus.ToDoList.ConsoleBot;
 
 namespace Homeworks_otus
@@ -20,7 +24,7 @@ namespace Homeworks_otus
         {
             try
             {
-                var handler = new UpdateHandler(new UserService(), new ToDoService());
+                var handler = new UpdateHandler(new UserService(new InMemoryUserRepository()), new ToDoService(new InMemoryToDoRepository()));
                 var botClient = new ConsoleBotClient();
                 Console.Write("Введите максимально допустимую длину задачи: ");
                 handler.SetMaxLengthLimit(Console.ReadLine());

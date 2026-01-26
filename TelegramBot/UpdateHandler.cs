@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
+using Homeworks_otus.Core.DataAccess;
 using Homeworks_otus.Core.Entities;
 using Homeworks_otus.Core.Exceptions;
 
@@ -22,7 +23,7 @@ namespace Homeworks_otus.Core.Services
 
         private readonly IUserService _userService;
         private readonly IToDoService _toDoService;
-        public UpdateHandler(IUserService userService, IToDoService toDoService)
+        public UpdateHandler(IUserService userService, IToDoService toDoService, IUserRepository userRepository)
         {
             _userService = userService;
             _toDoService = toDoService;
@@ -91,6 +92,14 @@ namespace Homeworks_otus.Core.Services
                     {
                         ShowAllTasks(botClient, update);
                     }
+                    else if (inpCmd.Equals("/report") && _userService.GetUser(update.Message.From.Id) != null)
+                    {
+                        Report(botClient, update);
+                    }
+                    else if (inpCmd.Equals("/find") && _userService.GetUser(update.Message.From.Id) != null)
+                    {
+                        Find(botClient, update);
+                    }
                     else if (inpCmd.Equals("/exit"))
                     {
                         Environment.Exit(1);
@@ -140,23 +149,23 @@ namespace Homeworks_otus.Core.Services
         }
         public string Help()
         {
-            string strHelp = "в этой программе следующий список доступных команд: /start, /help, " +
-                        "/info, /exit.\r\n" +
-                        "/start - программа просит Вас ввести своё имя, также сохраняет Ваш Id и дату регистрации.\r\n" +
-                        "/help - отображает краткую справочную информацию о том, как пользоваться программой. \r\n" +
-                        "/info - предоставляет информацию о версии программы и дате её создания.\r\n" +
-                        "/addtask - позволяет добавлять задачи в список (по одной).\r\n" +
-                        "/showtasks - отображает список всех добавленных задач со статусом Active.\r\n" +
-                        "/removetask - позволяет удалять задачи по номеру в общем списке.\r\n" +
-                        "/completetask - позволяет ставить отметку о выполнении задачи по ее Id.\r\n" +
-                        "/showalltasks - отображает список всех добавленных задач.\r\n" +
-                        "/exit - программа заканчивает свою работу.";
-            return strHelp;
+            return "в этой программе следующий список доступных команд: /start, /help, " +
+                   "/info, /exit.\r\n" +
+                   "/start - программа просит Вас ввести своё имя, также сохраняет Ваш Id и дату регистрации.\r\n" +
+                   "/help - отображает краткую справочную информацию о том, как пользоваться программой. \r\n" +
+                   "/info - предоставляет информацию о версии программы и дате её создания.\r\n" +
+                   "/addtask - позволяет добавлять задачи в список (по одной).\r\n" +
+                   "/showtasks - отображает список всех добавленных задач со статусом Active.\r\n" +
+                   "/removetask - позволяет удалять задачи по номеру в общем списке.\r\n" +
+                   "/completetask - позволяет ставить отметку о выполнении задачи по ее Id.\r\n" +
+                   "/showalltasks - отображает список всех добавленных задач.\r\n" +
+                   "/report - выводит завершенные/активные задачи на текущий момент.\r\n" +
+                   "/find - отображает список всех добавленных задач.\r\n" +
+                   "/exit - отображает список задач пользователя, которые начинаются на введенный префикс.";
         }
         public string Info()
         {
-            string strInfo = "программа v4 создана 20.01.2026";
-            return strInfo;
+            return "программа v4 создана 20.01.2026";
         }
         public void ShowTasks(ITelegramBotClient botClient, Update update)
         {
@@ -215,6 +224,15 @@ namespace Homeworks_otus.Core.Services
             {
                 botClient.SendMessage(update.Message.Chat, "кажется, список задач пуст");
             }
+        }
+        public void Report(ITelegramBotClient botClient, Update update)
+        {
+            Guid guidUserId = _userService.GetUser(update.Message.From.Id).UserId;
+            var toDoItems = ToDoReportService.GetUserStats(guidUserId);
+        }
+        public void Find(ITelegramBotClient botClient, Update update)
+        {
+           
         }
     }
 }
