@@ -17,27 +17,16 @@ namespace Homeworks_otus.Infrastructure.DataAccess
        
         public ToDoUser? GetUser(Guid userId)
         {
-            ToDoUser? User = _users.FirstOrDefault(user => user.UserId == userId);
-            if (User != null)
-                return User;
-            else
-                return null;
+            return _users.FirstOrDefault(user => user.UserId == userId);
         }
 
         public ToDoUser? GetUserByTelegramUserId(long telegramUserId)
         {
-            ToDoUser? User = _users.FirstOrDefault(user => user.TelegramUserId == telegramUserId);
-            if (User != null)
-                return User;
-            else
-                return null;
+            return _users.FirstOrDefault(user => user.TelegramUserId == telegramUserId);
         }
         public void Add(ToDoUser user)
         {
-            if (_users.Contains(user))
-                return;
-            else
-                _users.Add(user);
+            _users.Add(user);
         }
     }
 }

@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Homeworks_otus.Core.DataAccess;
 using Homeworks_otus.Core.Entities;
 
+using Otus.ToDoList.ConsoleBot.Types;
+
 namespace Homeworks_otus.Core.Services
 {
     public class UserService : IUserService
@@ -17,21 +19,20 @@ namespace Homeworks_otus.Core.Services
             _userRepository = userRepository;
         }
 
-        private readonly List<ToDoUser> _users = new List<ToDoUser>();
-
         public ToDoUser RegisterUser(long telegramUserId, string telegramUserName)
         {
             ToDoUser user = new ToDoUser(telegramUserId, telegramUserName);
-            _users.Add(user);
+            _userRepository.Add(user);
             return user;
         }
-        public ToDoUser? GetUser(long telegramUserId)
+        public ToDoUser? GetUser(Guid UserId)
         {
-            ToDoUser? User = _users.FirstOrDefault(user => user.TelegramUserId == telegramUserId);
-            if (User != null)
-                return User;
-            else
-                return null;
+            return _userRepository.GetUser(UserId);
+        }
+
+        public ToDoUser? GetUserByTelegramUserId(long telegramUserId)
+        {
+            return _userRepository.GetUserByTelegramUserId(telegramUserId);
         }
     }
 }

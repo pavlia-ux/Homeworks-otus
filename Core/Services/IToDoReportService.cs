@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Homeworks_otus.Core.Services
 {
-    interface IToDoReportService
+    public interface IToDoReportService
     {
         (int total, int completed, int active, DateTime generatedAt) GetUserStats(Guid userId);
     }

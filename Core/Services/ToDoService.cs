@@ -8,6 +8,8 @@ using Homeworks_otus.Core.DataAccess;
 using Homeworks_otus.Core.Entities;
 using Homeworks_otus.Core.Exceptions;
 
+using Otus.ToDoList.ConsoleBot.Types;
+
 using static Homeworks_otus.Core.Entities.ToDoItem;
 
 namespace Homeworks_otus.Core.Services
@@ -24,28 +26,24 @@ namespace Homeworks_otus.Core.Services
         int maxQuantity = 100;
         public int MaxLength { get => maxLength; set => maxLength = value; }
         public int MaxQuantity { get => maxQuantity; set => maxQuantity = value; }
-
-        private readonly List<ToDoItem> _toDoItems = new List<ToDoItem>();
         
         public IReadOnlyList<ToDoItem> GetAllByUserId(Guid userId)
         {
-            IReadOnlyList<ToDoItem> allToDoItems = _toDoItems.FindAll(n => n.User.UserId == userId);
-            return allToDoItems;
+            return _toDoRepository.GetAllByUserId(userId);
         }
         public IReadOnlyList<ToDoItem> GetActiveByUserId(Guid userId)
         {
-            IReadOnlyList<ToDoItem> activeToDoItems = _toDoItems.FindAll(n => n.State == ToDoItemState.Active && n.User.UserId == userId);
-            return activeToDoItems;
+            return _toDoRepository.GetActiveByUserId(userId);
         }
         public IReadOnlyList<ToDoItem> Find(ToDoUser user, string namePrefix)
         {
-            
+            return _toDoRepository.Find(user.UserId, x => x.Name.StartsWith(namePrefix));
         }
         public ToDoItem Add(ToDoUser user, string name)
         {
             ToDoItem toDoItem = new ToDoItem(user, name);
             
-            if (_toDoItems.Count >= MaxQuantity)
+            if (_toDoRepository.CountActive(user.UserId) >= MaxQuantity)
             {
                 throw new TaskCountLimitException(MaxQuantity);
             }
@@ -65,31 +63,19 @@ namespace Homeworks_otus.Core.Services
                 throw new Exception("Вы ввели пробелы или пустую строку");
             }
 
-            _toDoItems.Add(toDoItem);
+            _toDoRepository.Add(toDoItem);
             return toDoItem;
         }
         public void MarkAsCompleted(Guid id)
         {
-            foreach (ToDoItem toDo in _toDoItems)
-            {
-                if (toDo.Id == id)
-                {
-                    toDo.State = ToDoItemState.Completed;
-                    toDo.StateChangedAt = DateTime.UtcNow;
-                    break;
-                }
-            }
+            var task = _toDoRepository.Get(id);
+
+            if (task != null)
+                _toDoRepository.Update(task);
         }
         public void Delete(Guid id)
         {
-            foreach (ToDoItem toDo in _toDoItems)
-            {
-                if (toDo.Id == id)
-                {
-                    _toDoItems.RemoveAll(i => i.Id == id);
-                    break;
-                }
-            }
+            _toDoRepository.Delete(id);
         }
 
         public static bool ValidateString(string? str)
@@ -100,9 +86,9 @@ namespace Homeworks_otus.Core.Services
 
         private bool IsDuplicate(ToDoUser user, ToDoItem toDoItem)
         {
-            foreach (ToDoItem item in _toDoItems)
+            foreach (ToDoItem item in _toDoRepository.GetAllByUserId(user.UserId))
             {
-                if (item.Name == toDoItem.Name && user == item.User) 
+                if (item.Name == toDoItem.Name) 
                 {
                     return true;
                 }

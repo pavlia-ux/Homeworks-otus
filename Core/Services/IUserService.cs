@@ -10,6 +10,7 @@ namespace Homeworks_otus
     public interface IUserService
     {
         ToDoUser RegisterUser(long telegramUserId, string telegramUserName);
-        ToDoUser? GetUser(long telegramUserId);
+        ToDoUser? GetUser(Guid userId);
+        ToDoUser? GetUserByTelegramUserId(long telegramUserId);
     }
 }

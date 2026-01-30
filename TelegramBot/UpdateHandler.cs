@@ -23,10 +23,12 @@ namespace Homeworks_otus.Core.Services
 
         private readonly IUserService _userService;
         private readonly IToDoService _toDoService;
-        public UpdateHandler(IUserService userService, IToDoService toDoService)
+        private readonly IToDoReportService _toDoReportService;
+        public UpdateHandler(IUserService userService, IToDoService toDoService, IToDoReportService toDoReportService)
         {
             _userService = userService;
             _toDoService = toDoService;
+            _toDoReportService = toDoReportService;
         }
         public void SetMaxLengthLimit(string? str)
         {
@@ -44,7 +46,7 @@ namespace Homeworks_otus.Core.Services
                 if (!(int.TryParse(str, out int number) && number >= 1 && number <= _toDoService.MaxLength)) throw new ArgumentException($"Длина задачи не должна превышать {_toDoService.MaxLength} и быть меньше 1");
                 return number;
             }
-            else 
+            else
             {
                 if (!(int.TryParse(str, out int number) && number >= 1 && number <= _toDoService.MaxQuantity)) throw new ArgumentException($"Количество задач не должно превышать {_toDoService.MaxQuantity} и быть меньше 1");
                 return number;
@@ -71,34 +73,34 @@ namespace Homeworks_otus.Core.Services
                     {
                         botClient.SendMessage(update.Message.Chat, $"{Info()}");
                     }
-                    else if (inpCmd.Contains("/addtask") && _userService.GetUser(update.Message.From.Id) != null)
+                    else if (inpCmd.Contains("/addtask") && _userService.GetUserByTelegramUserId(update.Message.From.Id) != null)
                     {
-                        _toDoService.Add(_userService.GetUser(update.Message.From.Id), update.Message.Text.Replace("/addtask", "").Trim());
+                        _toDoService.Add(_userService.GetUserByTelegramUserId(update.Message.From.Id), update.Message.Text.Replace("/addtask", "").Trim());
                         botClient.SendMessage(update.Message.Chat, $"Задача добавлена");
                     }
-                    else if (inpCmd.Equals("/showtasks") && _userService.GetUser(update.Message.From.Id) != null)
+                    else if (inpCmd.Equals("/showtasks") && _userService.GetUserByTelegramUserId(update.Message.From.Id) != null)
                     {
                         ShowTasks(botClient, update);
                     }
-                    else if (inpCmd.Contains("/removetask") && _userService.GetUser(update.Message.From.Id) != null)
+                    else if (inpCmd.Contains("/removetask") && _userService.GetUserByTelegramUserId(update.Message.From.Id) != null)
                     {
                         RemoveTask(inpCmd.Substring(12), botClient, update);
                     }
-                    else if (inpCmd.Contains("/completetask") && _userService.GetUser(update.Message.From.Id) != null)
+                    else if (inpCmd.Contains("/completetask") && _userService.GetUserByTelegramUserId(update.Message.From.Id) != null)
                     {
                         CompleteTask(inpCmd.Substring(14), botClient, update);
                     }
-                    else if (inpCmd.Equals("/showalltasks") && _userService.GetUser(update.Message.From.Id) != null)
+                    else if (inpCmd.Equals("/showalltasks") && _userService.GetUserByTelegramUserId(update.Message.From.Id) != null)
                     {
                         ShowAllTasks(botClient, update);
                     }
-                    else if (inpCmd.Equals("/report") && _userService.GetUser(update.Message.From.Id) != null)
+                    else if (inpCmd.Equals("/report") && _userService.GetUserByTelegramUserId(update.Message.From.Id) != null)
                     {
-                        Report(botClient, update);
+                        Report(update.Message.From.Id, botClient, update);
                     }
-                    else if (inpCmd.Equals("/find") && _userService.GetUser(update.Message.From.Id) != null)
+                    else if (inpCmd.Contains("/find") && _userService.GetUserByTelegramUserId(update.Message.From.Id) != null)
                     {
-                        Find(botClient, update);
+                        Find(update.Message.From.Id, inpCmd.Substring(6), botClient, update);
                     }
                     else if (inpCmd.Equals("/exit"))
                     {
@@ -109,7 +111,7 @@ namespace Homeworks_otus.Core.Services
                         botClient.SendMessage(update.Message.Chat, "простите, но пока что я Вас не поняла :(");
                         break;
                     }
-                } 
+                }
                 while (string.IsNullOrWhiteSpace(inpCmd));
             }
             catch (TaskCountLimitException taskCountEx)
@@ -136,7 +138,7 @@ namespace Homeworks_otus.Core.Services
 
         public string Start(ITelegramBotClient botClient, Update update)
         {
-            ToDoUser? User = _userService.GetUser(update.Message.From.Id);
+            ToDoUser? User = _userService.GetUserByTelegramUserId(update.Message.From.Id);
             if (User == null)
             {
                 User = _userService.RegisterUser(update.Message.From.Id, update.Message.From.Username);
@@ -169,7 +171,7 @@ namespace Homeworks_otus.Core.Services
         }
         public void ShowTasks(ITelegramBotClient botClient, Update update)
         {
-            Guid guidUserId = _userService.GetUser(update.Message.From.Id).UserId;
+            Guid guidUserId = _userService.GetUserByTelegramUserId(update.Message.From.Id).UserId;
             var activeToDoItems = _toDoService.GetActiveByUserId(guidUserId);
 
             if (activeToDoItems.Count > 0)
@@ -202,7 +204,7 @@ namespace Homeworks_otus.Core.Services
         }
         public void ShowAllTasks(ITelegramBotClient botClient, Update update)
         {
-            Guid guidUserId = _userService.GetUser(update.Message.From.Id).UserId;
+            Guid guidUserId = _userService.GetUserByTelegramUserId(update.Message.From.Id).UserId;
             var toDoItems = _toDoService.GetAllByUserId(guidUserId);
 
             if (toDoItems.Count > 0)
@@ -225,14 +227,21 @@ namespace Homeworks_otus.Core.Services
                 botClient.SendMessage(update.Message.Chat, "кажется, список задач пуст");
             }
         }
-        public void Report(ITelegramBotClient botClient, Update update)
+        public void Report(long id, ITelegramBotClient botClient, Update update)
         {
-            Guid guidUserId = _userService.GetUser(update.Message.From.Id).UserId;
-            var toDoItems = ToDoReportService.GetUserStats(guidUserId);
+            ToDoUser? user = _userService.GetUserByTelegramUserId(id);
+            var userStats = _toDoReportService.GetUserStats(user.UserId);
+            botClient.SendMessage(update.Message.Chat, $"Статистика по задачам на {userStats.generatedAt}. Всего: {userStats.total}; Завершенных: {userStats.completed}; Активных: {userStats.active};");
         }
-        public void Find(ITelegramBotClient botClient, Update update)
+        public void Find(long id, string predicate, ITelegramBotClient botClient, Update update)
         {
-           
+            ToDoUser? user = _userService.GetUserByTelegramUserId(id);
+            var toDoItems = _toDoService.Find(user, predicate);
+            
+            for (int i = 0; i < toDoItems.Count; i++)
+            {
+                botClient.SendMessage(update.Message.Chat, $"{i + 1}. |{toDoItems[i].State}| {toDoItems[i].Name} - {toDoItems[i].CreatedAt} - {toDoItems[i].Id}");
+            }
         }
     }
 }
