@@ -19,20 +19,20 @@ namespace Homeworks_otus.Core.Services
             _userRepository = userRepository;
         }
 
-        public ToDoUser RegisterUser(long telegramUserId, string telegramUserName)
+        public async Task<ToDoUser> RegisterUserAsync(long telegramUserId, string telegramUserName, CancellationToken ct)
         {
             ToDoUser user = new ToDoUser(telegramUserId, telegramUserName);
-            _userRepository.Add(user);
+            _userRepository.AddAsync(user, ct);
             return user;
         }
-        public ToDoUser? GetUser(Guid UserId)
+        public async Task<ToDoUser?> GetUserAsync(Guid UserId, CancellationToken ct)
         {
-            return _userRepository.GetUser(UserId);
+            return await _userRepository.GetUserAsync(UserId, ct);
         }
 
-        public ToDoUser? GetUserByTelegramUserId(long telegramUserId)
+        public async Task<ToDoUser?> GetUserByTelegramUserIdAsync(long telegramUserId, CancellationToken ct)
         {
-            return _userRepository.GetUserByTelegramUserId(telegramUserId);
+            return await _userRepository.GetUserByTelegramUserIdAsync(telegramUserId, ct);
         }
     }
 }

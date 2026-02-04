@@ -9,8 +9,8 @@ namespace Homeworks_otus
 {
     public interface IUserService
     {
-        ToDoUser RegisterUser(long telegramUserId, string telegramUserName);
-        ToDoUser? GetUser(Guid userId);
-        ToDoUser? GetUserByTelegramUserId(long telegramUserId);
+        Task<ToDoUser> RegisterUserAsync(long telegramUserId, string telegramUserName, CancellationToken ct);
+        Task<ToDoUser?> GetUserAsync(Guid userId, CancellationToken ct);
+        Task<ToDoUser?> GetUserByTelegramUserIdAsync(long telegramUserId, CancellationToken ct);
     }
 }

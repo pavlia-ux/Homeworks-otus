@@ -20,31 +20,31 @@ namespace Homeworks_otus.Infrastructure.DataAccess
     {
         private readonly List<ToDoItem> _toDoItems = new List<ToDoItem>();
 
-        public IReadOnlyList<ToDoItem> GetAllByUserId(Guid userId)
+        public async Task<IReadOnlyList<ToDoItem>> GetAllByUserIdAsync(Guid userId, CancellationToken ct)
         {
             IReadOnlyList<ToDoItem> allToDoItems = _toDoItems.FindAll(x => x.User.UserId == userId).ToList();
             return allToDoItems;
         }
-        public IReadOnlyList<ToDoItem> GetActiveByUserId(Guid userId)
+        public async Task<IReadOnlyList<ToDoItem>> GetActiveByUserIdAsync(Guid userId, CancellationToken ct)
         {
             IReadOnlyList<ToDoItem> activeToDoItems = _toDoItems.FindAll(x => x.State == ToDoItemState.Active && x.User.UserId == userId);
             return activeToDoItems;
         }      
-        public IReadOnlyList<ToDoItem> Find(Guid userId, Func<ToDoItem, bool> predicate)
+        public async Task<IReadOnlyList<ToDoItem>> FindAsync(Guid userId, Func<ToDoItem, bool> predicate, CancellationToken ct)
         {
             var items = _toDoItems.Where(x => x.User.UserId == userId).ToList();
             return items.Where(predicate).ToList();
         }
-        public ToDoItem? Get(Guid id)
+        public async Task<ToDoItem?> GetAsync(Guid id, CancellationToken ct)
         {
             ToDoItem toDoItem = _toDoItems.Find(x => x.Id == id);
             return toDoItem;
         }
-        public void Add(ToDoItem item)
+        public async Task AddAsync(ToDoItem item, CancellationToken ct)
         {
             _toDoItems.Add(item);
         }
-        public void Update(ToDoItem item)
+        public async Task UpdateAsync(ToDoItem item, CancellationToken ct)
         {
             var task = _toDoItems.Find(x => x.Id == item.Id);
             if (task is null) 
@@ -53,13 +53,13 @@ namespace Homeworks_otus.Infrastructure.DataAccess
                 task.State = ToDoItemState.Completed;
                 task.StateChangedAt = DateTime.UtcNow;
         }
-        public void Delete(Guid id)
+        public async Task DeleteAsync(Guid id, CancellationToken ct)
         {
             var task = _toDoItems.Find(x => x.Id == id);
             if (task != null)
                 _toDoItems.Remove(task);
         }
-        public bool ExistsByName(Guid userId, string name)
+        public async Task<bool> ExistsByNameAsync(Guid userId, string name, CancellationToken ct)
         {
             ToDoItem existsItem = _toDoItems.Find(x => x.User.UserId == userId && x.Name == name);
             if (existsItem != null)
@@ -71,7 +71,7 @@ namespace Homeworks_otus.Infrastructure.DataAccess
                 return false;
             }
         }
-        public int CountActive(Guid userId)
+        public async Task<int> CountActiveAsync(Guid userId, CancellationToken ct)
         {
             IReadOnlyList<ToDoItem> allActiveItems = _toDoItems.FindAll(x => x.User.UserId == userId && x.State == ToDoItemState.Active);
             return allActiveItems.Count;

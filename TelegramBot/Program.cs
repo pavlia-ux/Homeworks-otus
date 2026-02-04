@@ -27,13 +27,15 @@ namespace Homeworks_otus
                 var inMemoryUserRepository = new InMemoryUserRepository();
                 var inMemoryToDoRepository = new InMemoryToDoRepository();
                 var toDoService = new ToDoService(inMemoryToDoRepository);
+                using var cts = new CancellationTokenSource();
                 var handler = new UpdateHandler(new UserService(inMemoryUserRepository), toDoService, new ToDoReportService(toDoService));
                 var botClient = new ConsoleBotClient();
+
                 Console.Write("Введите максимально допустимую длину задачи: ");
                 handler.SetMaxLengthLimit(Console.ReadLine());
                 Console.Write("Введите максимально допустимое количество задач: ");
                 handler.SetMaxQuantityLimit(Console.ReadLine());
-                botClient.StartReceiving(handler);
+                botClient.StartReceiving(handler, cts.Token);
             }
             catch (Exception ex)
             {

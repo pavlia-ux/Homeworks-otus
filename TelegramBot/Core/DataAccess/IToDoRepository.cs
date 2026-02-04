@@ -10,18 +10,18 @@ namespace Homeworks_otus.Core.DataAccess
 {
     public interface IToDoRepository
     {
-        IReadOnlyList<ToDoItem> GetAllByUserId(Guid userId);
+        Task<IReadOnlyList<ToDoItem>> GetAllByUserIdAsync(Guid userId, CancellationToken ct);
         //Возвращает ToDoItem для UserId со статусом Active
-        IReadOnlyList<ToDoItem> GetActiveByUserId(Guid userId);
-        IReadOnlyList<ToDoItem> Find(Guid userId, Func<ToDoItem, bool> predicate);
+        Task<IReadOnlyList<ToDoItem>> GetActiveByUserIdAsync(Guid userId, CancellationToken ct);
+        Task<IReadOnlyList<ToDoItem>> FindAsync(Guid userId, Func<ToDoItem, bool> predicate, CancellationToken ct);
         //Метод должен возвращать все задачи пользователя, которые удовлетворяют предикату.
-        ToDoItem? Get(Guid id);
-        void Add(ToDoItem item);
-        void Update(ToDoItem item);
-        void Delete(Guid id);
+        Task<ToDoItem?> GetAsync(Guid id, CancellationToken ct);
+        Task AddAsync(ToDoItem item, CancellationToken ct);
+        Task UpdateAsync(ToDoItem item, CancellationToken ct);
+        Task DeleteAsync(Guid id, CancellationToken ct);
         //Проверяет есть ли задача с таким именем у пользователя
-        bool ExistsByName(Guid userId, string name);
+        Task<bool> ExistsByNameAsync(Guid userId, string name, CancellationToken ct);
         //Возвращает количество активных задач у пользователя
-        int CountActive(Guid userId);
+        Task<int> CountActiveAsync(Guid userId, CancellationToken ct);
     }
 }
