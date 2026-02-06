@@ -11,13 +11,13 @@ namespace Homeworks_otus
     {
         int MaxLength { get; set; }
         int MaxQuantity { get; set; }
-        IReadOnlyList<ToDoItem> GetAllByUserId(Guid userId);
+        Task<IReadOnlyList<ToDoItem>> GetAllByUserIdAsync(Guid userId, CancellationToken ct);
         //Возвращает ToDoItem для UserId со статусом Active
-        IReadOnlyList<ToDoItem> GetActiveByUserId(Guid userId);
-        IReadOnlyList<ToDoItem> Find(ToDoUser user, string namePrefix);
+        Task<IReadOnlyList<ToDoItem>> GetActiveByUserIdAsync(Guid userId, CancellationToken ct);
+        Task<IReadOnlyList<ToDoItem>> FindAsync(ToDoUser user, string namePrefix, CancellationToken ct);
         //Метод должен возвращать все задачи пользователя, которые начинаются на namePrefix. Для этого нужно использовать метод IToDoRepository.Find
-        ToDoItem Add(ToDoUser user, string name);
-        void MarkAsCompleted(Guid id);
-        void Delete(Guid id);
+        Task<ToDoItem> AddAsync(ToDoUser user, string name, CancellationToken ct);
+        Task MarkAsCompletedAsync(Guid id, CancellationToken ct);
+        Task DeleteAsync(Guid id, CancellationToken ct);
     }
 }

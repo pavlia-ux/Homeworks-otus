@@ -10,8 +10,8 @@ namespace Homeworks_otus.Core.DataAccess
 {
     public interface IUserRepository
     {
-        ToDoUser? GetUser(Guid userId);
-        ToDoUser? GetUserByTelegramUserId(long telegramUserId);
-        void Add(ToDoUser user);
+        Task<ToDoUser?> GetUserAsync(Guid userId, CancellationToken ct);
+        Task<ToDoUser?> GetUserByTelegramUserIdAsync(long telegramUserId, CancellationToken ct);
+        Task AddAsync(ToDoUser user, CancellationToken ct);
     }
 }

@@ -18,13 +18,13 @@ namespace Homeworks_otus.Core.Services
         {
             _toDoService = toDoService;
         }
-        public (int total, int completed, int active, DateTime generatedAt) GetUserStats(Guid userId)
+        public async Task<(int total, int completed, int active, DateTime generatedAt)> GetUserStatsAsync(Guid userId, CancellationToken ct)
         {
             var result = (total: 0, completed: 0, active: 0, generatedAt: DateTime.UtcNow);
 
-            result.total = _toDoService.GetAllByUserId(userId).Count();
-            result.completed = _toDoService.GetAllByUserId(userId).Where(x => x.State == ToDoItemState.Completed).Count();
-            result.active = _toDoService.GetActiveByUserId(userId).Where(x => x.State == ToDoItemState.Active).Count();
+            result.total = _toDoService.GetAllByUserIdAsync(userId, ct).Result.Count();
+            result.completed = _toDoService.GetAllByUserIdAsync(userId, ct).Result.Where(x => x.State == ToDoItemState.Completed).Count();
+            result.active = _toDoService.GetActiveByUserIdAsync(userId, ct).Result.Where(x => x.State == ToDoItemState.Active).Count();
 
             return result;
         }

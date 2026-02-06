@@ -15,16 +15,16 @@ namespace Homeworks_otus.Infrastructure.DataAccess
     {
         private readonly List<ToDoUser> _users = new List<ToDoUser>();
        
-        public ToDoUser? GetUser(Guid userId)
+        public async Task<ToDoUser?> GetUserAsync(Guid userId, CancellationToken ct)
         {
             return _users.FirstOrDefault(user => user.UserId == userId);
         }
 
-        public ToDoUser? GetUserByTelegramUserId(long telegramUserId)
+        public async Task<ToDoUser?> GetUserByTelegramUserIdAsync(long telegramUserId, CancellationToken ct)
         {
             return _users.FirstOrDefault(user => user.TelegramUserId == telegramUserId);
         }
-        public void Add(ToDoUser user)
+        public async Task AddAsync(ToDoUser user, CancellationToken ct)
         {
             _users.Add(user);
         }
