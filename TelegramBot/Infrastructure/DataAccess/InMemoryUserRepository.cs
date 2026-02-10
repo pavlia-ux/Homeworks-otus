@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 using Homeworks_otus.Core.DataAccess;
 using Homeworks_otus.Core.Entities;
 
-using Otus.ToDoList.ConsoleBot.Types;
-
 namespace Homeworks_otus.Infrastructure.DataAccess
 {
     internal class InMemoryUserRepository : IUserRepository

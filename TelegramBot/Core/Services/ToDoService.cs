@@ -8,8 +8,6 @@ using Homeworks_otus.Core.DataAccess;
 using Homeworks_otus.Core.Entities;
 using Homeworks_otus.Core.Exceptions;
 
-using Otus.ToDoList.ConsoleBot.Types;
-
 using static Homeworks_otus.Core.Entities.ToDoItem;
 
 namespace Homeworks_otus.Core.Services
