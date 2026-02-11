@@ -52,19 +52,24 @@ namespace Homeworks_otus
                 var handler = new UpdateHandler(new UserService(inMemoryUserRepository), toDoService, new ToDoReportService(toDoService));
                                                
                 botClient.StartReceiving(handler, receiverOptions, cts.Token);
-                User user = await botClient.GetMe();
+                
+                var me = await botClient.GetMe();
                 await botClient.SetMyCommands(setMyCommands());
-                Console.WriteLine($"{user.FirstName} запущен!");
+                Console.WriteLine($"Бот @{me.Username} запущен. Нажмите клавишу F для выхода.");
 
-                if (Console.ReadKey().Key == ConsoleKey.F)
+                Console.WriteLine("Введите максимально допустимую длину задачи:");
+                handler.SetMaxLengthLimit(Console.ReadLine());
+                Console.WriteLine("Введите максимально допустимое количество задач:");
+                handler.SetMaxQuantityLimit(Console.ReadLine());
+
+                while (Console.ReadKey().Key != ConsoleKey.F)
                 {
-                    Console.WriteLine("Асинхронные операции отменены.");
-                    cts.Cancel();
+                    me = await botClient.GetMe();
+                    Console.WriteLine($"Информация о боте: @{me.Username}, ID: {me.Id}, Имя: {me.FirstName}");
                 }
-                else
-                {
-                    Console.WriteLine($@"Информация о боте: {user.Username}");
-                }
+
+                Console.WriteLine("Завершение работы...");
+                cts.Cancel();
 
                 await Task.Delay(-1); // Устанавливаем бесконечную задержку
             }

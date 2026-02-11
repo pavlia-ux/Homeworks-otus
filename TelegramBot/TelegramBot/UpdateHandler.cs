@@ -67,31 +67,25 @@ namespace Homeworks_otus.Core.Services
                 {
                     if (inpCmd.Equals("/start"))
                     {
-                        await botClient.SendMessage(update.Message.Chat, $"{Start(botClient, update, ct)}", cancellationToken: ct);
-                        await botClient.SendMessage(update.Message.Chat, "Нажмите клавишу F для выхода", cancellationToken: ct);
+                        await Start(botClient, update, ct);
                         break;
                     }
 
                     if (_userService.GetUserByTelegramUserIdAsync(update.Message.From.Id, ct).Result != null)
                     {
-                        //botClient.SendMessage(update.Message.Chat, "Введите максимально допустимую длину задачи:", cancellationToken: ct);
-                        //SetMaxLengthLimit(Console.ReadLine());
-                        //botClient.SendMessage(update.Message.Chat, "Введите максимально допустимое количество задач:", cancellationToken: ct);
-                        //SetMaxQuantityLimit(Console.ReadLine());
-
                         if (inpCmd.Equals("/help"))
                         {
-                            await botClient.SendMessage(update.Message.Chat, $"{Help(botClient, update, ct)}", cancellationToken: ct);
+                            await Help(botClient, update, ct);
                             break;
                         }
                         else if (inpCmd.Equals("/info"))
                         {
-                            await botClient.SendMessage(update.Message.Chat, $"{Info(botClient, update, ct)}", cancellationToken: ct);
+                            await Info(botClient, update, ct);
                             break;
                         }
                         else if (inpCmd.Contains("/addtask"))
                         {
-                            _toDoService.AddAsync(_userService.GetUserByTelegramUserIdAsync(update.Message.From.Id, ct).Result, update.Message.Text.Replace("/addtask", "").Trim(), ct);
+                            await _toDoService.AddAsync(_userService.GetUserByTelegramUserIdAsync(update.Message.From.Id, ct).Result, update.Message.Text.Replace("/addtask", "").Trim(), ct);
                             await botClient.SendMessage(update.Message.Chat, "Задача добавлена", cancellationToken: ct);
                             break;
                         }
