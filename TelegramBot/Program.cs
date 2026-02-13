@@ -68,10 +68,10 @@ namespace Homeworks_otus
                     Console.WriteLine($"Информация о боте: @{me.Username}, ID: {me.Id}, Имя: {me.FirstName}");
                 }
 
-                Console.WriteLine("Завершение работы...");
-                cts.Cancel();
+                //Console.WriteLine("Завершение работы...");
+                //cts.Cancel();
 
-                await Task.Delay(-1); // Устанавливаем бесконечную задержку
+                //await Task.Delay(-1); // Устанавливаем бесконечную задержку
             }
             catch (Exception ex)
             {
