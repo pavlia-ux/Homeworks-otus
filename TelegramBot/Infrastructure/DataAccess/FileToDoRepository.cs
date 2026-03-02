@@ -47,7 +47,7 @@ namespace Homeworks_otus.TelegramBot.Infrastructure.DataAccess
         }
         public async Task<IReadOnlyList<ToDoItem>> FindAsync(Guid userId, Func<ToDoItem, bool> predicate, CancellationToken ct)
         {
-            var items = (await GetTasks(userId, ct)).Where(x => x.User.UserId == userId).ToList();
+            var items = (await GetTasks(userId, ct)).Where(x => x.User.UserId == userId);
             return items.Where(x => predicate(x)).ToList();
         }
         public async Task<ToDoItem?> GetAsync(Guid id, CancellationToken ct)
