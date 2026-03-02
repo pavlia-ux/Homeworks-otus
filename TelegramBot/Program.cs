@@ -13,7 +13,7 @@ using System.Xml.Linq;
 
 using Homeworks_otus.Core.DataAccess;
 using Homeworks_otus.Core.Services;
-using Homeworks_otus.Infrastructure.DataAccess;
+using Homeworks_otus.TelegramBot.Infrastructure.DataAccess;
 
 using Telegram.Bot;
 using Telegram.Bot.Polling;
@@ -33,15 +33,17 @@ namespace Homeworks_otus
         {
             try
             {
+                const string directoryName = "UserDirectory";
+
                 if (string.IsNullOrEmpty(_botKey))
                 {
                     Console.WriteLine("Bot token not found. Please set the TELEGRAM_BOT_TOKEN environment variable.");
                     return;
                 }
 
-                var inMemoryUserRepository = new InMemoryUserRepository();
-                var inMemoryToDoRepository = new InMemoryToDoRepository();
-                var toDoService = new ToDoService(inMemoryToDoRepository);
+                var fileUserRepository = new FileUserRepository(directoryName);
+                var fileToDoRepository = new FileToDoRepository(directoryName);
+                var toDoService = new ToDoService(fileToDoRepository);
                 using var cts = new CancellationTokenSource();
                 var botClient = new TelegramBotClient(_botKey);
                 var receiverOptions = new ReceiverOptions
@@ -49,7 +51,7 @@ namespace Homeworks_otus
                     AllowedUpdates = [UpdateType.Message],
                     DropPendingUpdates = true
                 };
-                var handler = new UpdateHandler(new UserService(inMemoryUserRepository), toDoService, new ToDoReportService(toDoService));
+                var handler = new UpdateHandler(new UserService(fileUserRepository), toDoService, new ToDoReportService(toDoService));
                                                
                 botClient.StartReceiving(handler, receiverOptions, cts.Token);
                 
