@@ -13,6 +13,8 @@ using System.Xml.Linq;
 
 using Homeworks_otus.Core.DataAccess;
 using Homeworks_otus.Core.Services;
+using Homeworks_otus.TelegramBot.Core.DataAccess;
+using Homeworks_otus.TelegramBot.Core.Services;
 using Homeworks_otus.TelegramBot.Infrastructure.DataAccess;
 
 using Telegram.Bot;
@@ -43,7 +45,12 @@ namespace Homeworks_otus
 
                 var fileUserRepository = new FileUserRepository(directoryName);
                 var fileToDoRepository = new FileToDoRepository(directoryName);
+                var userService = new UserService(fileUserRepository);
                 var toDoService = new ToDoService(fileToDoRepository);
+                var scenarios = new List<IScenario>()
+                {
+                    new AddTaskScenario(userService, toDoService)
+                };
                 using var cts = new CancellationTokenSource();
                 var botClient = new TelegramBotClient(_botKey);
                 var receiverOptions = new ReceiverOptions
@@ -51,7 +58,7 @@ namespace Homeworks_otus
                     AllowedUpdates = [UpdateType.Message],
                     DropPendingUpdates = true
                 };
-                var handler = new UpdateHandler(new UserService(fileUserRepository), toDoService, new ToDoReportService(toDoService));
+                var handler = new UpdateHandler(userService, toDoService, new ToDoReportService(toDoService), scenarios, new InMemoryScenarioContextRepository());
                                                
                 botClient.StartReceiving(handler, receiverOptions, cts.Token);
                 
@@ -92,6 +99,7 @@ namespace Homeworks_otus
             new BotCommand("/showalltasks", "отображает список всех добавленных задач."),
             new BotCommand("/report", "выводит завершенные/активные задачи на текущий момент."),
             new BotCommand("/find", "отображает список задач пользователя, которые начинаются на введенный префикс."),
+            new BotCommand("/cancel", "останавливает сценарии."),
             };
             
             return commands;

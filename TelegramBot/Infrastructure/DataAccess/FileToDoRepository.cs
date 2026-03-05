@@ -144,7 +144,7 @@ namespace Homeworks_otus.TelegramBot.Infrastructure.DataAccess
                     _indexes.Clear();
                     string[] users = Directory.GetFiles(_directoryName, "*.json", SearchOption.TopDirectoryOnly).Where(name => name.LastIndexOf("indexes.json") == -1).ToArray();
                     for (int i = 0; i < users.Length; i++)
-                    {//ищем задачи по папка пользователей. Учитываем, что адрес без ".json" т.е. нужны папки.
+                    {
                         string pathToTaskUser = users[i].Remove(users[i].LastIndexOf(".json"));
                         string[] tasks = Directory.GetFiles(pathToTaskUser);
                         for (int j = 0; j < tasks.Length; j++)
