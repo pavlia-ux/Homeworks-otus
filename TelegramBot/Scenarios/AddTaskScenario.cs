@@ -11,8 +11,8 @@ using Homeworks_otus.TelegramBot.Core.Keyboard;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
-using static Homeworks_otus.TelegramBot.Core.DataAccess.IScenario;
-using static Homeworks_otus.TelegramBot.Core.Services.ScenarioContext;
+using static Homeworks_otus.TelegramBot.Scenarios.ScenarioTypeClass;
+using static Homeworks_otus.TelegramBot.Scenarios.ScenarioResultClass;
 
 namespace Homeworks_otus.TelegramBot.Core.Services
 {

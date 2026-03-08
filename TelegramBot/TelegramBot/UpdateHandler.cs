@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-using Homeworks_otus.Core.DataAccess;
 using Homeworks_otus.Core.Entities;
 using Homeworks_otus.Core.Exceptions;
 using Homeworks_otus.TelegramBot.Core.DataAccess;
@@ -22,8 +21,8 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
 using static Homeworks_otus.Core.Entities.ToDoItem;
-using static Homeworks_otus.TelegramBot.Core.DataAccess.IScenario;
-using static Homeworks_otus.TelegramBot.Core.Services.ScenarioContext;
+using static Homeworks_otus.TelegramBot.Scenarios.ScenarioResultClass;
+using static Homeworks_otus.TelegramBot.Scenarios.ScenarioTypeClass;
 
 namespace Homeworks_otus.Core.Services
 {

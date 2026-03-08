@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-using Homeworks_otus.Core.DataAccess;
 using Homeworks_otus.Core.Services;
 using Homeworks_otus.TelegramBot.Core.DataAccess;
 using Homeworks_otus.TelegramBot.Core.Services;
@@ -21,8 +20,6 @@ using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-
-using static Telegram.Bot.TelegramBotClient;
 
 namespace Homeworks_otus
 {
