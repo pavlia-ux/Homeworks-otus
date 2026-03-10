@@ -1,0 +1,17 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+using Homeworks_otus.TelegramBot.Core.Services;
+
+namespace Homeworks_otus.TelegramBot.Core.DataAccess
+{
+    public interface IScenarioContextRepository
+    {
+        Task<ScenarioContext?> GetContext(long userId, CancellationToken ct);
+        Task SetContext(long userId, ScenarioContext context, CancellationToken ct);
+        Task ResetContext(long userId, CancellationToken ct);
+    }
+}

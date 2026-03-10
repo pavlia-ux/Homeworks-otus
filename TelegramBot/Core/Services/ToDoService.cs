@@ -8,8 +8,6 @@ using Homeworks_otus.Core.DataAccess;
 using Homeworks_otus.Core.Entities;
 using Homeworks_otus.Core.Exceptions;
 
-using static Homeworks_otus.Core.Entities.ToDoItem;
-
 namespace Homeworks_otus.Core.Services
 {
     public class ToDoService : IToDoService
@@ -37,9 +35,9 @@ namespace Homeworks_otus.Core.Services
         {
             return await _toDoRepository.FindAsync(user.UserId, x => x.Name.StartsWith(namePrefix), ct);
         }
-        public async Task<ToDoItem> AddAsync(ToDoUser user, string name, CancellationToken ct)
+        public async Task<ToDoItem> AddAsync(ToDoUser user, string name, DateTime deadLine, CancellationToken ct)
         {
-            ToDoItem toDoItem = new ToDoItem(user, name);
+            ToDoItem toDoItem = new ToDoItem(user, name, deadLine);
             
             if (_toDoRepository.CountActiveAsync(user.UserId, ct).Result >= MaxQuantity)
             {

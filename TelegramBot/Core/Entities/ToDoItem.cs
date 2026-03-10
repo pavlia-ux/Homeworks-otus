@@ -18,13 +18,15 @@ namespace Homeworks_otus.Core.Entities
         public string Name { get; set; }
         public DateTime CreatedAt { get; set; }
         public ToDoItemState State { get; set; }
+        public DateTime DeadLine { get; set; }
         public DateTime? StateChangedAt { get; set; }
-        public ToDoItem(ToDoUser user, string name)
+        public ToDoItem(ToDoUser user, string name, DateTime deadLine)
         {
             Id = Guid.NewGuid();
             User = user;
             Name = name;
             CreatedAt = DateTime.UtcNow;
+            DeadLine = deadLine;
             State = ToDoItemState.Active;
         }
     }

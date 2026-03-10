@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
@@ -8,9 +9,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-using Homeworks_otus.Core.DataAccess;
 using Homeworks_otus.Core.Entities;
 using Homeworks_otus.Core.Exceptions;
+using Homeworks_otus.TelegramBot.Core.DataAccess;
+using Homeworks_otus.TelegramBot.Core.Keyboard;
+using Homeworks_otus.TelegramBot.Core.Services;
 
 using Telegram.Bot;
 using Telegram.Bot.Polling;
@@ -18,6 +21,8 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
 using static Homeworks_otus.Core.Entities.ToDoItem;
+using static Homeworks_otus.TelegramBot.Scenarios.ScenarioResultClass;
+using static Homeworks_otus.TelegramBot.Scenarios.ScenarioTypeClass;
 
 namespace Homeworks_otus.Core.Services
 {
@@ -28,11 +33,15 @@ namespace Homeworks_otus.Core.Services
         private readonly IUserService _userService;
         private readonly IToDoService _toDoService;
         private readonly IToDoReportService _toDoReportService;
-        public UpdateHandler(IUserService userService, IToDoService toDoService, IToDoReportService toDoReportService)
+        private readonly IEnumerable _scenarios;
+        private readonly IScenarioContextRepository _scenarioContextRepository;
+        public UpdateHandler(IUserService userService, IToDoService toDoService, IToDoReportService toDoReportService, IEnumerable scenarios, IScenarioContextRepository scenarioContextRepository)
         {
             _userService = userService;
             _toDoService = toDoService;
             _toDoReportService = toDoReportService;
+            _scenarios = scenarios;
+            _scenarioContextRepository = scenarioContextRepository;
         }
         public void SetMaxLengthLimit(string? str)
         {
@@ -61,7 +70,21 @@ namespace Homeworks_otus.Core.Services
         {
             try
             {
+                ScenarioContext? context;
                 string inpCmd = update.Message.Text;
+
+                if (update.Message.Text.StartsWith("/cancel"))
+                {
+                    await _scenarioContextRepository.ResetContext(update.Message.From.Id, ct);
+                    await botClient.SendMessage(update.Message.Chat, "Сценарий отменён.", replyMarkup: ReplyKeyboard.SetStandardListButton(), cancellationToken: ct);
+                    return;
+                }
+                context = await _scenarioContextRepository.GetContext(update.Message.From.Id, ct);
+                if (context != null)
+                {
+                    await ProcessScenario(botClient, context, update.Message, ct);
+                    return;
+                }
 
                 do
                 {
@@ -85,8 +108,9 @@ namespace Homeworks_otus.Core.Services
                         }
                         else if (inpCmd.Contains("/addtask"))
                         {
-                            await _toDoService.AddAsync(_userService.GetUserByTelegramUserIdAsync(update.Message.From.Id, ct).Result, update.Message.Text.Replace("/addtask", "").Trim(), ct);
-                            await botClient.SendMessage(update.Message.Chat, "Задача добавлена", cancellationToken: ct);
+                            context = new ScenarioContext(ScenarioType.AddTask);
+                            await _scenarioContextRepository.SetContext(update.Message.From.Id, context, ct);
+                            await ProcessScenario(botClient, context, update.Message, ct);
                             break;
                         }
                         else if (inpCmd.Equals("/showtasks"))
@@ -135,29 +159,51 @@ namespace Homeworks_otus.Core.Services
             }
             catch (TaskCountLimitException taskCountEx)
             {
-                HandleErrorAsync(botClient, taskCountEx, HandleErrorSource.HandleUpdateError, ct);
+                await HandleErrorAsync(botClient, taskCountEx, HandleErrorSource.HandleUpdateError, ct);
+                await _scenarioContextRepository.ResetContext(update.Message.From.Id, ct);
             }
             catch (TaskLengthLimitException taskLengthEx)
             {
-                HandleErrorAsync(botClient, taskLengthEx, HandleErrorSource.HandleUpdateError, ct);
+                await HandleErrorAsync(botClient, taskLengthEx, HandleErrorSource.HandleUpdateError, ct);
+                await _scenarioContextRepository.ResetContext(update.Message.From.Id, ct);
             }
             catch (DuplicateTaskException duplicateTaskEx)
             {
-                HandleErrorAsync(botClient, duplicateTaskEx, HandleErrorSource.HandleUpdateError, ct);
+                await HandleErrorAsync(botClient, duplicateTaskEx, HandleErrorSource.HandleUpdateError, ct);
+                await _scenarioContextRepository.ResetContext(update.Message.From.Id, ct);
             }
             catch (ArgumentException argEx)
             {
-                HandleErrorAsync(botClient, argEx, HandleErrorSource.HandleUpdateError, ct);
+                await HandleErrorAsync(botClient, argEx, HandleErrorSource.HandleUpdateError, ct);
+                await _scenarioContextRepository.ResetContext(update.Message.From.Id, ct);
             }
             catch (Exception ex)
             {
-                HandleErrorAsync(botClient, ex, HandleErrorSource.HandleUpdateError, ct);
+                await HandleErrorAsync(botClient, ex, HandleErrorSource.HandleUpdateError, ct);
+                await _scenarioContextRepository.ResetContext(update.Message.From.Id, ct);
             }
         }
 
         public async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source, CancellationToken ct)
         {
             Console.WriteLine($"HandleError: {exception.Message})");
+        }
+        private IScenario GetScenario(ScenarioType scenarioType)
+        {
+            foreach (IScenario scenario in _scenarios)
+            {
+                if (scenario.CanHandle(scenarioType))
+                {
+                    return scenario;
+                }
+            }
+            throw new ArgumentException("Сценарий не найден");
+        }
+        private async Task ProcessScenario(ITelegramBotClient botClient, ScenarioContext context, Message msg, CancellationToken ct)
+        {
+            IScenario scenario = GetScenario(context.CurrentScenario);
+            if (await scenario.HandleMessageAsync(botClient, context, msg, ct) == ScenarioResult.Completed)
+                await _scenarioContextRepository.ResetContext(msg.From.Id, ct);
         }
 
         public async Task Start(ITelegramBotClient botClient, Update update, CancellationToken ct)
@@ -197,7 +243,8 @@ namespace Homeworks_otus.Core.Services
                    "/completetask - позволяет ставить отметку о выполнении задачи по ее Id.\r\n" +
                    "/showalltasks - отображает список всех добавленных задач.\r\n" +
                    "/report - выводит завершенные/активные задачи на текущий момент.\r\n" +
-                   "/find - отображает список задач пользователя, которые начинаются на введенный префикс.", cancellationToken: ct);
+                   "/find - отображает список задач пользователя, которые начинаются на введенный префикс.\r\n" +
+                   "/cancel - останавливает сценарии.", cancellationToken: ct);
         }
         public async Task Info(ITelegramBotClient botClient, Update update, CancellationToken ct)
         {

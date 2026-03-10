@@ -4,9 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using Homeworks_otus.Core.DataAccess;
-using Homeworks_otus.Core.Entities;
-
 using static Homeworks_otus.Core.Entities.ToDoItem;
 
 namespace Homeworks_otus.Core.Services
