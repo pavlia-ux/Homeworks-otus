@@ -10,7 +10,7 @@ namespace Homeworks_otus.Core.Exceptions
     {
         public DuplicateTaskException(string task)
         {
-            Console.WriteLine($"Задача {task} уже существует");
+            Console.WriteLine($"Задача или лист {task} уже существует");
         }
     }
 }

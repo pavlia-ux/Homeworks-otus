@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Homeworks_otus.Core.DataAccess;
 using Homeworks_otus.Core.Entities;
 using Homeworks_otus.Core.Exceptions;
+using Homeworks_otus.TelegramBot.Core.Entities;
 
 namespace Homeworks_otus.Core.Services
 {
@@ -35,9 +36,9 @@ namespace Homeworks_otus.Core.Services
         {
             return await _toDoRepository.FindAsync(user.UserId, x => x.Name.StartsWith(namePrefix), ct);
         }
-        public async Task<ToDoItem> AddAsync(ToDoUser user, string name, DateTime deadLine, CancellationToken ct)
+        public async Task<ToDoItem> AddAsync(ToDoUser user, string name, DateTime deadLine, ToDoList? list, CancellationToken ct)
         {
-            ToDoItem toDoItem = new ToDoItem(user, name, deadLine);
+            ToDoItem toDoItem = new ToDoItem(user, name, deadLine, list);
             
             if (_toDoRepository.CountActiveAsync(user.UserId, ct).Result >= MaxQuantity)
             {
@@ -90,6 +91,17 @@ namespace Homeworks_otus.Core.Services
                 }
             }
             return false;
+        }
+
+        public async Task<IReadOnlyList<ToDoItem>> GetByUserIdAndList(Guid userId, Guid? listId, CancellationToken ct)
+        {
+            List<ToDoItem> toDoList = new List<ToDoItem>();
+            foreach (ToDoItem task in await _toDoRepository.GetAllByUserIdAsync(userId, ct))
+            {
+                if (task.List != null && task.List.Id == listId)
+                    toDoList.Add(task);
+            }
+            return toDoList;
         }
     }
 }

@@ -1,20 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Linq;
-using System.Runtime.ConstrainedExecution;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
 using Homeworks_otus.Core.Services;
 using Homeworks_otus.TelegramBot.Core.DataAccess;
 using Homeworks_otus.TelegramBot.Core.Services;
 using Homeworks_otus.TelegramBot.Infrastructure.DataAccess;
+using Homeworks_otus.TelegramBot.Scenarios;
 
 using Telegram.Bot;
 using Telegram.Bot.Polling;
@@ -34,19 +26,19 @@ namespace Homeworks_otus
             {
                 const string directoryName = "UserDirectory";
 
-                if (string.IsNullOrEmpty(_botKey))
-                {
-                    Console.WriteLine("Bot token not found. Please set the TELEGRAM_BOT_TOKEN environment variable.");
-                    return;
-                }
+                DirectoryIndexes.Initialize(directoryName);
 
                 var fileUserRepository = new FileUserRepository(directoryName);
                 var fileToDoRepository = new FileToDoRepository(directoryName);
+                var fileToDoListRepository = new FileToDoListRepository(directoryName);
                 var userService = new UserService(fileUserRepository);
                 var toDoService = new ToDoService(fileToDoRepository);
+                var toDoListService = new ToDoListService(fileToDoListRepository);
                 var scenarios = new List<IScenario>()
                 {
-                    new AddTaskScenario(userService, toDoService)
+                    new AddTaskScenario(userService, toDoListService, toDoService),
+                    new AddListScenario(userService, toDoListService),
+                    new DeleteListScenario(userService, toDoListService, toDoService)
                 };
                 using var cts = new CancellationTokenSource();
                 var botClient = new TelegramBotClient(_botKey);
@@ -55,7 +47,7 @@ namespace Homeworks_otus
                     AllowedUpdates = [UpdateType.Message],
                     DropPendingUpdates = true
                 };
-                var handler = new UpdateHandler(userService, toDoService, new ToDoReportService(toDoService), scenarios, new InMemoryScenarioContextRepository());
+                var handler = new UpdateHandler(userService, toDoService, new ToDoReportService(toDoService), toDoListService, scenarios, new InMemoryScenarioContextRepository());
                                                
                 botClient.StartReceiving(handler, receiverOptions, cts.Token);
                 
@@ -90,10 +82,9 @@ namespace Homeworks_otus
             new BotCommand("/help", "отображает краткую справочную информацию."),
             new BotCommand("/info", "предоставляет информацию о версии программы и дате её создания."),
             new BotCommand("/addtask", "позволяет добавлять задачи в список (по одной)."),
-            new BotCommand("/showtasks", "отображает список всех добавленных задач со статусом Active."),
+            new BotCommand("/show", "отображает список всех добавленных задач со статусом Active."),
             new BotCommand("/removetask", "позволяет удалять задачи по номеру в общем списке."),
             new BotCommand("/completetask", "позволяет ставить отметку о выполнении задачи по ее Id."),
-            new BotCommand("/showalltasks", "отображает список всех добавленных задач."),
             new BotCommand("/report", "выводит завершенные/активные задачи на текущий момент."),
             new BotCommand("/find", "отображает список задач пользователя, которые начинаются на введенный префикс."),
             new BotCommand("/cancel", "останавливает сценарии."),

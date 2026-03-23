@@ -1,26 +1,20 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
 using Homeworks_otus.Core.Entities;
 using Homeworks_otus.Core.Exceptions;
 using Homeworks_otus.TelegramBot.Core.DataAccess;
+using Homeworks_otus.TelegramBot.Core.Entities;
 using Homeworks_otus.TelegramBot.Core.Keyboard;
 using Homeworks_otus.TelegramBot.Core.Services;
+using Homeworks_otus.TelegramBot.Dto;
 
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
-using static Homeworks_otus.Core.Entities.ToDoItem;
 using static Homeworks_otus.TelegramBot.Scenarios.ScenarioResultClass;
 using static Homeworks_otus.TelegramBot.Scenarios.ScenarioTypeClass;
 
@@ -33,13 +27,15 @@ namespace Homeworks_otus.Core.Services
         private readonly IUserService _userService;
         private readonly IToDoService _toDoService;
         private readonly IToDoReportService _toDoReportService;
+        private readonly IToDoListService _toDoListService;
         private readonly IEnumerable _scenarios;
         private readonly IScenarioContextRepository _scenarioContextRepository;
-        public UpdateHandler(IUserService userService, IToDoService toDoService, IToDoReportService toDoReportService, IEnumerable scenarios, IScenarioContextRepository scenarioContextRepository)
+        public UpdateHandler(IUserService userService, IToDoService toDoService, IToDoReportService toDoReportService, IToDoListService toDoListService, IEnumerable scenarios, IScenarioContextRepository scenarioContextRepository)
         {
             _userService = userService;
             _toDoService = toDoService;
             _toDoReportService = toDoReportService;
+            _toDoListService = toDoListService;
             _scenarios = scenarios;
             _scenarioContextRepository = scenarioContextRepository;
         }
@@ -113,9 +109,9 @@ namespace Homeworks_otus.Core.Services
                             await ProcessScenario(botClient, context, update.Message, ct);
                             break;
                         }
-                        else if (inpCmd.Equals("/showtasks"))
+                        else if (inpCmd.Equals("/show"))
                         {
-                            await ShowTasks(botClient, update, ct);
+                            await Show(botClient, update, ct);
                             break;
                         }
                         else if (inpCmd.Contains("/removetask"))
@@ -126,11 +122,6 @@ namespace Homeworks_otus.Core.Services
                         else if (inpCmd.Contains("/completetask"))
                         {
                             await CompleteTask(inpCmd.Substring(14), botClient, update, ct);
-                            break;
-                        }
-                        else if (inpCmd.Equals("/showalltasks"))
-                        {
-                            await ShowAllTasks(botClient, update, ct);
                             break;
                         }
                         else if (inpCmd.Equals("/report"))
@@ -213,8 +204,7 @@ namespace Homeworks_otus.Core.Services
             ReplyKeyboardMarkup replyKeyboardMarkup = new(
                 new[]
                 {
-                    new KeyboardButton("/showalltasks"),
-                    new KeyboardButton("/showtasks"),
+                    new KeyboardButton("/show"),
                     new KeyboardButton("/report"),
                 })
             {
@@ -238,10 +228,9 @@ namespace Homeworks_otus.Core.Services
                    "/help - отображает краткую справочную информацию о том, как пользоваться программой. \r\n" +
                    "/info - предоставляет информацию о версии программы и дате её создания.\r\n" +
                    "/addtask - позволяет добавлять задачи в список (по одной).\r\n" +
-                   "/showtasks - отображает список всех добавленных задач со статусом Active.\r\n" +
+                   "/show - отображает список всех добавленных задач со статусом Active.\r\n" +
                    "/removetask - позволяет удалять задачи по Id в общем списке.\r\n" +
                    "/completetask - позволяет ставить отметку о выполнении задачи по ее Id.\r\n" +
-                   "/showalltasks - отображает список всех добавленных задач.\r\n" +
                    "/report - выводит завершенные/активные задачи на текущий момент.\r\n" +
                    "/find - отображает список задач пользователя, которые начинаются на введенный префикс.\r\n" +
                    "/cancel - останавливает сценарии.", cancellationToken: ct);
@@ -250,25 +239,30 @@ namespace Homeworks_otus.Core.Services
         {
             await botClient.SendMessage(update.Message.Chat, "программа v4 создана 20.01.2026", cancellationToken: ct);
         }
-        public async Task ShowTasks(ITelegramBotClient botClient, Update update, CancellationToken ct)
+        public async Task Show(ITelegramBotClient botClient, Update update, CancellationToken ct)
         {
-            Guid guidUserId = _userService.GetUserByTelegramUserIdAsync(update.Message.From.Id, ct).Result.UserId;
-            var activeToDoItems = _toDoService.GetActiveByUserIdAsync(guidUserId, ct);
-
-            if (activeToDoItems.Result.Count > 0)
+            List<InlineKeyboardButton[]> buttons = new List<InlineKeyboardButton[]>();
+            buttons.Add(new[]
             {
-                int a = 1;
-                for (int i = 0; i < activeToDoItems.Result.Count; i++)
+                new InlineKeyboardButton()
                 {
-                    await botClient.SendMessage(update.Message.Chat, $"{a}. {activeToDoItems.Result[i].Name} - {activeToDoItems.Result[i].CreatedAt} - `{activeToDoItems.Result[i].Id}`", cancellationToken: ct);
-                    a++;
+                    Text = "📌Без списка",
+                    CallbackData = "show"
                 }
-            }
-
-            else
+            });
+            IReadOnlyList<ToDoList> userLists = await _toDoListService.GetUserLists((await _userService.GetUserByTelegramUserIdAsync(update.Message.From.Id, ct)).UserId, ct);
+            foreach (ToDoList list in userLists)
             {
-                await botClient.SendMessage(update.Message.Chat, "кажется, список задач пуст", cancellationToken: ct);
+                buttons.Add(new[] { new InlineKeyboardButton() { Text = list.Name, CallbackData = ToDoListCallbackDto.FromString($"show|{list.Id}").ToString() } });
             }
+            buttons.Add(new[]
+            {
+                new InlineKeyboardButton()
+                {Text = "🆕Добавить", CallbackData = "addlist"},
+                new InlineKeyboardButton()
+                {Text = "❌Удалить", CallbackData = "deletelist"}
+            });
+            await botClient.SendMessage(update.Message.Chat, "Выберите список", replyMarkup: new InlineKeyboardMarkup(buttons), cancellationToken: ct);
         }
         public async Task RemoveTask(string taskId, ITelegramBotClient botClient, Update update, CancellationToken ct)
         {
@@ -282,31 +276,6 @@ namespace Homeworks_otus.Core.Services
             if (!string.IsNullOrWhiteSpace(taskId)) Guid.TryParse(taskId, out id);
             _toDoService.MarkAsCompletedAsync(id, ct);
             await botClient.SendMessage(update.Message.Chat, $"Задача отмечена как выполненная", cancellationToken: ct);
-        }
-        public async Task ShowAllTasks(ITelegramBotClient botClient, Update update, CancellationToken ct)
-        {
-            Guid guidUserId = _userService.GetUserByTelegramUserIdAsync(update.Message.From.Id, ct).Result.UserId;
-            var toDoItems = _toDoService.GetAllByUserIdAsync(guidUserId, ct);
-
-            if (toDoItems.Result.Count > 0)
-            {
-                for (int i = 0; i < toDoItems.Result.Count; i++)
-                {
-                    if (toDoItems.Result[i].State == ToDoItemState.Completed)
-                    {
-                        await botClient.SendMessage(update.Message.Chat, $"{i + 1}. |{toDoItems.Result[i].State} - {toDoItems.Result[i].StateChangedAt}| {toDoItems.Result[i].Name} - {toDoItems.Result[i].CreatedAt} - `{toDoItems.Result[i].Id}`", cancellationToken: ct);
-                    }
-                    else
-                    {
-                        await botClient.SendMessage(update.Message.Chat, $"{i + 1}. |{toDoItems.Result[i].State}| {toDoItems.Result[i].Name} - {toDoItems.Result[i].CreatedAt} - `{toDoItems.Result[i].Id}`", cancellationToken: ct);
-                    }
-                }
-            }
-
-            else
-            {
-                await botClient.SendMessage(update.Message.Chat, "кажется, список задач пуст", cancellationToken: ct);
-            }
         }
         public async Task Report(long id, ITelegramBotClient botClient, Update update, CancellationToken ct)
         {
