@@ -15,7 +15,6 @@ namespace Homeworks_otus.TelegramBot.Infrastructure.DataAccess
     internal class FileToDoRepository : IToDoRepository
     {
         private readonly string _directoryName;
-        private Dictionary<string, string> _indexes = new Dictionary<string, string>();
 
         public enum IndexOperation
         {
@@ -29,12 +28,6 @@ namespace Homeworks_otus.TelegramBot.Infrastructure.DataAccess
             {
                 Directory.CreateDirectory(directoryName);
             }
-            if (!File.Exists(Path.Combine(directoryName, "indexes.json"))) 
-            {
-                File.Create(Path.Combine(directoryName, "indexes.json")).Close();
-            }
-
-            UpdateIndexes(IndexOperation.UpdateAll);
         }
 
         public async Task<IReadOnlyList<ToDoItem>> GetAllByUserIdAsync(Guid userId, CancellationToken ct)
@@ -52,13 +45,10 @@ namespace Homeworks_otus.TelegramBot.Infrastructure.DataAccess
         }
         public async Task<ToDoItem?> GetAsync(Guid id, CancellationToken ct)
         {
-            if (!_indexes.ContainsKey(id.ToString()))
-            {
+            if (!(await DirectoryIndexes.GetTaskIndexes()).ContainsKey(id.ToString()))
                 throw new ArgumentException("Такой задачи нет");
-            }
-
             ToDoItem item;
-            using (FileStream stream = File.OpenRead(Path.Combine(_directoryName, _indexes[id.ToString()], $"{id.ToString()}.json")))
+            using (FileStream stream = File.OpenRead(Path.Combine(_directoryName, (await DirectoryIndexes.GetTaskIndexes())[id.ToString()], $"{id.ToString()}.json")))
             {
                 item = await JsonSerializer.DeserializeAsync<ToDoItem>(stream, cancellationToken: ct);
             }
@@ -74,16 +64,12 @@ namespace Homeworks_otus.TelegramBot.Infrastructure.DataAccess
                 await JsonSerializer.SerializeAsync(stream, item, cancellationToken: ct);
             }
 
-            _indexes.Add(item.Id.ToString(), item.User.UserId.ToString());
-            UpdateIndexes(IndexOperation.Update);
+            await DirectoryIndexes.AddTaskIndex(item.Id.ToString(), item.User.UserId.ToString());
         }
         public async Task UpdateAsync(ToDoItem item, CancellationToken ct)
         {
-            if (!_indexes.ContainsKey(item.Id.ToString())) 
-            {
+            if (!(await DirectoryIndexes.GetTaskIndexes()).ContainsKey(item.Id.ToString()))
                 throw new ArgumentException("Такой задачи нет");
-            }
-
             string pathToTask = Path.Combine(_directoryName, item.User.UserId.ToString(), $"{item.Id.ToString()}.json");
             ToDoItem itemChanging = null;
             using (FileStream stream = new FileStream(pathToTask, FileMode.Open, FileAccess.Read))
@@ -98,15 +84,11 @@ namespace Homeworks_otus.TelegramBot.Infrastructure.DataAccess
         }
         public async Task DeleteAsync(Guid id, CancellationToken ct)
         {
-            if (!_indexes.ContainsKey(id.ToString()))
-            {
-                throw new ArgumentException("Такой задачи нет.");
-            }
-
-            string path = Path.Combine(_directoryName, _indexes[id.ToString()], $"{id.ToString()}.json");
+            if (!(await DirectoryIndexes.GetTaskIndexes()).ContainsKey(id.ToString()))
+                throw new ArgumentException("Такой задачи нет");
+            string path = Path.Combine(_directoryName, (await DirectoryIndexes.GetTaskIndexes())[id.ToString()], $"{id.ToString()}.json");
             File.Delete(path);
-            _indexes.Remove(id.ToString());
-            UpdateIndexes(IndexOperation.Update);
+            await DirectoryIndexes.RemoveTaskIndex(id.ToString());
         }
         public async Task<bool> ExistsByNameAsync(Guid userId, string name, CancellationToken ct)
         {
@@ -129,35 +111,6 @@ namespace Homeworks_otus.TelegramBot.Infrastructure.DataAccess
                 }
             }
             return result;
-        }
-
-        private void UpdateIndexes(IndexOperation operation)
-        {
-            string json = string.Empty;
-            switch (operation)
-            {
-                case IndexOperation.Update:
-                    json = JsonSerializer.Serialize(_indexes);
-                    File.WriteAllText(Path.Combine(_directoryName, "indexes.json"), json);
-                    break;
-                case IndexOperation.UpdateAll:
-                    _indexes.Clear();
-                    string[] users = Directory.GetFiles(_directoryName, "*.json", SearchOption.TopDirectoryOnly).Where(name => name.LastIndexOf("indexes.json") == -1).ToArray();
-                    for (int i = 0; i < users.Length; i++)
-                    {
-                        string pathToTaskUser = users[i].Remove(users[i].LastIndexOf(".json"));
-                        string[] tasks = Directory.GetFiles(pathToTaskUser);
-                        for (int j = 0; j < tasks.Length; j++)
-                        {
-                            string taskId = Path.GetFileNameWithoutExtension(tasks[j]);
-                            string userId = Path.GetFileNameWithoutExtension(users[i]);
-                            _indexes.Add(taskId, userId);
-                        }
-                    }
-                    json = JsonSerializer.Serialize(_indexes);
-                    File.WriteAllText(Path.Combine(_directoryName, "indexes.json"), json);
-                    break;
-            }
         }
     }
 }

@@ -24,8 +24,8 @@ namespace Homeworks_otus.TelegramBot.Core.Keyboard
             return new ReplyKeyboardMarkup(new List<KeyboardButton>()
             {
                 new KeyboardButton("/addtask"),
-                new KeyboardButton("/showtasks"),
-                new KeyboardButton("/showalltasks") });
+                new KeyboardButton("/show"),
+                new KeyboardButton("/report"), });
         }
         public static ReplyKeyboardMarkup SetCancelButton()
         {

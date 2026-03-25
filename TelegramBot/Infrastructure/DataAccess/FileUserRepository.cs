@@ -21,10 +21,6 @@ namespace Homeworks_otus.TelegramBot.Infrastructure.DataAccess
             {
                 Directory.CreateDirectory(directoryName);
             }
-            if (!File.Exists(Path.Combine(directoryName, "indexes.json")))
-            {
-                File.Create(Path.Combine(directoryName, "indexes.json")).Close();
-            }
         }
 
         public async Task<ToDoUser?> GetUserAsync(Guid userId, CancellationToken ct)
@@ -42,7 +38,7 @@ namespace Homeworks_otus.TelegramBot.Infrastructure.DataAccess
         }
         public async Task<ToDoUser?> GetUserByTelegramUserIdAsync(long telegramUserId, CancellationToken ct)
         {
-            string[] users = Directory.GetFiles(_directoryName, "*.json").Where(name => name.LastIndexOf("indexes.json") == -1).ToArray();
+            string[] users = Directory.GetFiles(_directoryName, "*.json").Where(name => name.LastIndexOf("Indexes.json") == -1).ToArray();
             ToDoUser? user = null;
             for (int i = 0; i < users.Length; i++)
             {

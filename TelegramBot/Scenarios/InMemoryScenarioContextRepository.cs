@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,7 +12,7 @@ namespace Homeworks_otus.TelegramBot.Infrastructure.DataAccess
 {
     internal class InMemoryScenarioContextRepository : IScenarioContextRepository
     {
-        private readonly Dictionary<long, ScenarioContext> _context = new();
+        private readonly ConcurrentDictionary<long, ScenarioContext> _context = new();
         public async Task<ScenarioContext?> GetContext(long userId, CancellationToken ct)
         {
             if (_context.ContainsKey(userId))
@@ -22,7 +23,7 @@ namespace Homeworks_otus.TelegramBot.Infrastructure.DataAccess
         public async Task ResetContext(long userId, CancellationToken ct)
         {
             if (_context.ContainsKey(userId))
-                _context.Remove(userId);
+                _context.TryRemove(userId, out ScenarioContext value);
         }
 
         public async Task SetContext(long userId, ScenarioContext context, CancellationToken ct)
@@ -30,7 +31,7 @@ namespace Homeworks_otus.TelegramBot.Infrastructure.DataAccess
             if (_context.ContainsKey(userId))
                 _context[userId] = context;
             else
-                _context.Add(userId, context);
+                _context.TryAdd(userId, context);
         }
     }
 }
