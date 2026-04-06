@@ -1,0 +1,32 @@
+CREATE TABLE "ToDoUser"
+(
+    id SERIAL PRIMARY KEY,
+	"TelegramUserId" INTEGER NOT NULL,
+	"TelegramUserName" VARCHAR NOT NULL,
+	"RegisteredAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "ToDoList"
+(
+    id SERIAL PRIMARY KEY,
+	"ListName" VARCHAR NOT NULL,
+	"UserId" INTEGER REFERENCES "ToDoUser"(id),
+	"ListCreatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "ToDoItem"
+(
+    id SERIAL PRIMARY KEY,
+	"UserId" INTEGER REFERENCES "ToDoUser"(id),
+	"ItemName" VARCHAR NOT NULL,
+	"ItemCreatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	"DeadLine" TIMESTAMP NOT NULL,
+	"StateChangedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	"ListId" INTEGER REFERENCES "ToDoList"(id),
+	"ToDoItemState" INTEGER NOT NULL
+);
+
+CREATE INDEX "idx_ToDoList_UserId" ON "ToDoList"("UserId");
+CREATE INDEX "idx_ToDoItem_UserId" ON "ToDoItem"("UserId");
+CREATE INDEX "idx_ToDoItem_ListId" ON "ToDoItem"("ListId");
+CREATE UNIQUE INDEX "idx_UX_ToDoUser_TelegramUserId" ON "ToDoUser"("TelegramUserId");
