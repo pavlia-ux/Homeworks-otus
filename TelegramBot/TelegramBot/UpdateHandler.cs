@@ -30,6 +30,7 @@ namespace Homeworks_otus.Core.Services
         private readonly IToDoListService _toDoListService;
         private readonly IEnumerable _scenarios;
         private readonly IScenarioContextRepository _scenarioContextRepository;
+        private static int _pageSize = 5;
         public UpdateHandler(IUserService userService, IToDoService toDoService, IToDoReportService toDoReportService, IToDoListService toDoListService, IEnumerable scenarios, IScenarioContextRepository scenarioContextRepository)
         {
             _userService = userService;
@@ -69,7 +70,7 @@ namespace Homeworks_otus.Core.Services
                 ScenarioContext? context;
                 string inpCmd = update.Message.Text;
 
-                if (update.Message.Text.StartsWith("/cancel"))
+                if (inpCmd.StartsWith("/cancel"))
                 {
                     await _scenarioContextRepository.ResetContext(update.Message.From.Id, ct);
                     await botClient.SendMessage(update.Message.Chat, "Сценарий отменён.", replyMarkup: ReplyKeyboard.SetStandardListButton(), cancellationToken: ct);
@@ -109,19 +110,9 @@ namespace Homeworks_otus.Core.Services
                             await ProcessScenario(botClient, context, update.Message, ct);
                             break;
                         }
-                        else if (inpCmd.Equals("/show"))
+                        else if (inpCmd.StartsWith("/show"))
                         {
-                            await Show(botClient, update, ct);
-                            break;
-                        }
-                        else if (inpCmd.Contains("/removetask"))
-                        {
-                            await RemoveTask(inpCmd.Substring(12), botClient, update, ct);
-                            break;
-                        }
-                        else if (inpCmd.Contains("/completetask"))
-                        {
-                            await CompleteTask(inpCmd.Substring(14), botClient, update, ct);
+                            await Show(botClient, update, true, ct);
                             break;
                         }
                         else if (inpCmd.Equals("/report"))
@@ -229,8 +220,6 @@ namespace Homeworks_otus.Core.Services
                    "/info - предоставляет информацию о версии программы и дате её создания.\r\n" +
                    "/addtask - позволяет добавлять задачи в список (по одной).\r\n" +
                    "/show - отображает список всех добавленных задач со статусом Active.\r\n" +
-                   "/removetask - позволяет удалять задачи по Id в общем списке.\r\n" +
-                   "/completetask - позволяет ставить отметку о выполнении задачи по ее Id.\r\n" +
                    "/report - выводит завершенные/активные задачи на текущий момент.\r\n" +
                    "/find - отображает список задач пользователя, которые начинаются на введенный префикс.\r\n" +
                    "/cancel - останавливает сценарии.", cancellationToken: ct);
@@ -263,19 +252,6 @@ namespace Homeworks_otus.Core.Services
                 {Text = "❌Удалить", CallbackData = "deletelist"}
             });
             await botClient.SendMessage(update.Message.Chat, "Выберите список", replyMarkup: new InlineKeyboardMarkup(buttons), cancellationToken: ct);
-        }
-        public async Task RemoveTask(string taskId, ITelegramBotClient botClient, Update update, CancellationToken ct)
-        {
-            Guid.TryParse(taskId, out Guid id);
-            _toDoService.DeleteAsync(id, ct);
-            await botClient.SendMessage(update.Message.Chat, "Ваша задача удалена", cancellationToken: ct);
-        }
-        public async Task CompleteTask(string taskId, ITelegramBotClient botClient, Update update, CancellationToken ct)
-        {
-            Guid id = Guid.Empty;
-            if (!string.IsNullOrWhiteSpace(taskId)) Guid.TryParse(taskId, out id);
-            _toDoService.MarkAsCompletedAsync(id, ct);
-            await botClient.SendMessage(update.Message.Chat, $"Задача отмечена как выполненная", cancellationToken: ct);
         }
         public async Task Report(long id, ITelegramBotClient botClient, Update update, CancellationToken ct)
         {

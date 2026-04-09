@@ -14,9 +14,10 @@ namespace Homeworks_otus.TelegramBot.Dto
             string[] values = input.Split('|');
             ToDoListCallbackDto dto = new ToDoListCallbackDto();
             dto.Action = values[0];
-            dto.ToDoListId = Guid.Parse(values[1]);
+            if (values.Length > 1)
+                dto.ToDoListId = Guid.Parse(values[1]);
             return dto;
         }
-        public override string ToString() => $"{base.ToString()}|{ToDoListId}"; //переопределить метод.Он должен возвращать $"{base.ToString()}|{ToDoListId}"
+        public override string ToString() => $"{base.ToString()}{(ToDoListId != null ? "|" + ToDoListId : "")}"; //- переопределить метод.Он должен возвращать $"{base.ToString()}|{ToDoListId}"
     }
 }

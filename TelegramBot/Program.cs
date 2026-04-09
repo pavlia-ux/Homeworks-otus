@@ -38,7 +38,8 @@ namespace Homeworks_otus
                 {
                     new AddTaskScenario(userService, toDoListService, toDoService),
                     new AddListScenario(userService, toDoListService),
-                    new DeleteListScenario(userService, toDoListService, toDoService)
+                    new DeleteListScenario(userService, toDoListService, toDoService),
+                    new DeleteTaskScenario(toDoService)
                 };
                 using var cts = new CancellationTokenSource();
                 var botClient = new TelegramBotClient(_botKey);
@@ -83,8 +84,6 @@ namespace Homeworks_otus
             new BotCommand("/info", "предоставляет информацию о версии программы и дате её создания."),
             new BotCommand("/addtask", "позволяет добавлять задачи в список (по одной)."),
             new BotCommand("/show", "отображает список всех добавленных задач со статусом Active."),
-            new BotCommand("/removetask", "позволяет удалять задачи по номеру в общем списке."),
-            new BotCommand("/completetask", "позволяет ставить отметку о выполнении задачи по ее Id."),
             new BotCommand("/report", "выводит завершенные/активные задачи на текущий момент."),
             new BotCommand("/find", "отображает список задач пользователя, которые начинаются на введенный префикс."),
             new BotCommand("/cancel", "останавливает сценарии."),
