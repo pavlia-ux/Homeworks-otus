@@ -8,7 +8,7 @@ namespace Homeworks_otus.TelegramBot.Dto
 {
     internal class ToDoItemCallbackDto : CallbackDto
     {
-        public Guid? ToDoItemId { get; set; }
+        public Guid ToDoItemId { get; set; }
         public static new ToDoItemCallbackDto FromString(string input)
         {
             string[] values = input.Split('|');

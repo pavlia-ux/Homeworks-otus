@@ -36,9 +36,9 @@ namespace Homeworks_otus.Core.Services
         {
             return await _toDoRepository.GetCompletedByUserIdAsync(userId, ct);
         }
-        public async Task<IReadOnlyList<ToDoItem>> FindAsync(ToDoUser user, string namePrefix, CancellationToken ct)
+        public async Task<IReadOnlyList<ToDoItem>> FindAsync(Guid userId, string namePrefix, CancellationToken ct)
         {
-            return await _toDoRepository.FindAsync(user.UserId, x => x.Name.StartsWith(namePrefix), ct);
+            return await _toDoRepository.FindAsync(userId, item => item.Name.StartsWith(namePrefix), ct);
         }
         public async Task<ToDoItem> AddAsync(ToDoUser user, string name, DateTime deadLine, ToDoList? list, CancellationToken ct)
         {
