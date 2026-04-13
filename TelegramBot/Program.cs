@@ -45,7 +45,7 @@ namespace Homeworks_otus
                 var botClient = new TelegramBotClient(_botKey);
                 var receiverOptions = new ReceiverOptions
                 {
-                    AllowedUpdates = [UpdateType.Message],
+                    AllowedUpdates = [UpdateType.Message, UpdateType.CallbackQuery],
                     DropPendingUpdates = true
                 };
                 var handler = new UpdateHandler(userService, toDoService, new ToDoReportService(toDoService), toDoListService, scenarios, new InMemoryScenarioContextRepository());
