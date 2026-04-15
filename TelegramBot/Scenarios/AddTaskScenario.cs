@@ -65,10 +65,10 @@ namespace Homeworks_otus.TelegramBot.Core.Services
                     context.Data["Lists"] = lists;
                     foreach (ToDoList list in lists)
                     {
-                        listButtons.Add(new[] { new InlineKeyboardButton() { Text = list.Name, CallbackData = ToDoListCallbackDto.FromString($"selectList|{list.Id}").ToString() } });
+                        listButtons.Add(new[] { new InlineKeyboardButton() { Text = list.Name, CallbackData = ToDoListCallbackDto.FromString($"SelectedList|{list.Id}").ToString() } });
                     }
                     await botClient.SendMessage(message.Chat, "Выберите список, в которой нужно добавить задачу:", replyMarkup: new InlineKeyboardMarkup(listButtons), cancellationToken: ct);
-                    context.CurrentStep = "SelectList";
+                    context.CurrentStep = "SelectedList";
                     return ScenarioResult.Transition;
                 case "SelectedList":
                     ToDoList selectedList = null;

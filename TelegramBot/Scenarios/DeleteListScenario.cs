@@ -41,8 +41,6 @@ namespace Homeworks_otus.TelegramBot.Scenarios
             switch (context.CurrentStep)
             {
                 case null:
-                    ToDoUser user = await _userService.GetUserByTelegramUserIdAsync(message.From.Id, ct);
-                    context.Data.Add("User", user);
                     await botClient.SendMessage(message.Chat, "Выберите список для удаления:", replyMarkup: ReplyKeyboard.SetStandardListButton(), cancellationToken: ct);
                     context.CurrentStep = "Approve";
                     return ScenarioResult.Transition;

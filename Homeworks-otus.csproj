@@ -11,10 +11,13 @@
   <ItemGroup>
     <Compile Remove="Core\**" />
     <Compile Remove="Infrastructure\**" />
+    <Compile Remove="TelegramBot\obj\**" />
     <EmbeddedResource Remove="Core\**" />
     <EmbeddedResource Remove="Infrastructure\**" />
+    <EmbeddedResource Remove="TelegramBot\obj\**" />
     <None Remove="Core\**" />
     <None Remove="Infrastructure\**" />
+    <None Remove="TelegramBot\obj\**" />
   </ItemGroup>
 
   <ItemGroup>
