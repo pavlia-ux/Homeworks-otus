@@ -9,6 +9,7 @@ using Homeworks_otus.TelegramBot.Core.DataAccess;
 using Homeworks_otus.TelegramBot.Core.Entities;
 using Homeworks_otus.TelegramBot.Core.Keyboard;
 using Homeworks_otus.TelegramBot.Core.Services;
+using Homeworks_otus.TelegramBot.Dto;
 using Homeworks_otus.TelegramBot.Infrastructure.DataAccess;
 
 using Telegram.Bot;
@@ -41,7 +42,19 @@ namespace Homeworks_otus.TelegramBot.Scenarios
             switch (context.CurrentStep)
             {
                 case null:
-                    await botClient.SendMessage(message.Chat, "Выберите список для удаления:", replyMarkup: ReplyKeyboard.SetStandardListButton(), cancellationToken: ct);
+                    IReadOnlyList<ToDoList> userLists = await _toDoListService.GetUserLists((await _userService.GetUserByTelegramUserIdAsync(long.Parse(context.Data["TelegramUserId"].ToString()), ct)).UserId, ct);
+                    if (userLists.Count == 0)
+                    {
+                        throw new ArgumentException("Не обнаружены списки");
+                    }
+                    context.Data.Add("Lists", userLists);
+                    List<InlineKeyboardButton[]> listButtons = new List<InlineKeyboardButton[]>();
+                    foreach (ToDoList list in userLists)
+                    {
+                        listButtons.Add(new[] { new InlineKeyboardButton() { Text = list.Name, CallbackData = ToDoListCallbackDto.FromString($"deletelist|{list.Id}").ToString() } });
+                    }
+                    context.Data.Add("Callback", "");//Для переноса ответа.
+                    await botClient.SendMessage(message.Chat, "Выберете список для удаления:", replyMarkup: new InlineKeyboardMarkup(listButtons), cancellationToken: ct);
                     context.CurrentStep = "Approve";
                     return ScenarioResult.Transition;
                 case "Approve":
@@ -59,22 +72,23 @@ namespace Homeworks_otus.TelegramBot.Scenarios
                     context.CurrentStep = "Delete";
                     return ScenarioResult.Transition;
                 case "Delete":
-                    if (context.Data["Callback"] == "no") 
+                    if (context.Data["Callback"].ToString() == "no")
                     {
                         await botClient.SendMessage(message.Chat, "Удаление отменено.", replyMarkup: ReplyKeyboard.SetStandardListButton(), cancellationToken: ct);
                         return ScenarioResult.Completed;
                     }
-                    Guid userId = (await _userService.GetUserByTelegramUserIdAsync(message.From.Id, ct)).UserId;
+                    Guid userId = (await _userService.GetUserByTelegramUserIdAsync(long.Parse(context.Data["TelegramUserId"].ToString()), ct)).UserId;
                     Guid listId = ((ToDoList)(context.Data["SelectedList"])).Id;
-                    await _toDoListService.Delete(listId, ct);
-                    await DirectoryIndexes.RemoveTaskListIndex(listId.ToString());
                     foreach (ToDoItem toDoItem in await _toDoService.GetByUserIdAndList(userId, listId, ct))
                     {
                         await _toDoService.DeleteAsync(toDoItem.Id, ct);
                         await DirectoryIndexes.RemoveTaskIndex(toDoItem.Id.ToString());
                     }
+                    await _toDoListService.Delete(listId, ct);
+                    await DirectoryIndexes.RemoveTaskListIndex(listId.ToString());
                     break;
             }
+            await botClient.SendMessage(message.Chat, "Лист удалён.", replyMarkup: ReplyKeyboard.SetStandardListButton(), cancellationToken: ct);
             return ScenarioResult.Completed;
         }
     }

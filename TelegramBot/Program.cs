@@ -29,7 +29,7 @@ namespace Homeworks_otus
                 DirectoryIndexes.Initialize(directoryName);
 
                 var fileUserRepository = new FileUserRepository(directoryName);
-                var fileToDoRepository = new FileToDoRepository(directoryName);
+                var fileToDoRepository = new FileToDoRepository(directoryName); 
                 var fileToDoListRepository = new FileToDoListRepository(directoryName);
                 var userService = new UserService(fileUserRepository);
                 var toDoService = new ToDoService(fileToDoRepository);

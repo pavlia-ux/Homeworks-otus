@@ -61,7 +61,7 @@ namespace Homeworks_otus.TelegramBot.Core.Services
                     }
                     context.Data.Add("DeadLine", message.Text);
                     List<InlineKeyboardButton[]> listButtons = new List<InlineKeyboardButton[]>();
-                    IReadOnlyList<ToDoList> lists = await _toDoListService.GetUserLists((await _userService.GetUserByTelegramUserIdAsync(message.From.Id, ct)).UserId, ct);
+                    IReadOnlyList<ToDoList> lists = await _toDoListService.GetUserLists((await _userService.GetUserByTelegramUserIdAsync(long.Parse(context.Data["TelegramUserId"].ToString()), ct)).UserId, ct);
                     context.Data["Lists"] = lists;
                     foreach (ToDoList list in lists)
                     {
@@ -80,7 +80,7 @@ namespace Homeworks_otus.TelegramBot.Core.Services
                             break;
                         }
                     }
-                    await _toDoService.AddAsync(await _userService.GetUserByTelegramUserIdAsync(message.From.Id, ct), context.Data["Name"].ToString(), Convert.ToDateTime(context.Data["DeadLine"].ToString()), selectedList, ct);
+                    await _toDoService.AddAsync(await _userService.GetUserByTelegramUserIdAsync(long.Parse(context.Data["TelegramUserId"].ToString()), ct), context.Data["Name"].ToString(), Convert.ToDateTime(context.Data["DeadLine"].ToString()), selectedList, ct);
                     break;
             }
             await botClient.SendMessage(message.Chat, "Задача успешно добавлена", replyMarkup: ReplyKeyboard.SetStandardListButton(), cancellationToken: ct);
