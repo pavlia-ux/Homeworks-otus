@@ -42,7 +42,19 @@ namespace Homeworks_otus.Core.Services
         }
         public async Task<ToDoItem> AddAsync(ToDoUser user, string name, DateTime deadLine, ToDoList? list, CancellationToken ct)
         {
-            ToDoItem toDoItem = new ToDoItem(user, name, deadLine, list);
+            ToDoItem toDoItem = new ToDoItem()
+            {
+                Id = Guid.NewGuid(),
+                User = user,
+                Name = name,
+                CreatedAt = DateTime.UtcNow,
+                State = Entities.Enums.ToDoItemState.Active,
+                DeadLine = deadLine,
+                ToDoList = toDoList,
+                ToDoListDatabaseId = toDoList.DatabaseId,
+                UserDatabaseId = user.DatabaseId,
+                UserId = user.UserId
+            };
             
             if (_toDoRepository.CountActiveAsync(user.UserId, ct).Result >= MaxQuantity)
             {

@@ -12,27 +12,20 @@ namespace Homeworks_otus.Core.Entities
     {
         public enum ToDoItemState
         {
-            Active, Completed
+            Active = 0, Completed = 1
         }
 
         public Guid Id { get; set; }
+        //public int? DatabaseId { get; set; }
+        //public Guid UserId { get; set; }
+        //public int? UserDatabaseId { get; set; }
         public ToDoUser User { get; set; }
         public string Name { get; set; }
         public DateTime CreatedAt { get; set; }
         public ToDoItemState State { get; set; }
         public DateTime DeadLine { get; set; }
         public DateTime? StateChangedAt { get; set; }
-
+        //public int? ToDoListDatabaseId { get; set; }
         public ToDoList? List { get; set; }
-        public ToDoItem(ToDoUser user, string name, DateTime deadLine, ToDoList? list)
-        {
-            Id = Guid.NewGuid();
-            User = user;
-            Name = name;
-            CreatedAt = DateTime.UtcNow;
-            DeadLine = deadLine;
-            State = ToDoItemState.Active;
-            List = list;
-        }
     }
 }
