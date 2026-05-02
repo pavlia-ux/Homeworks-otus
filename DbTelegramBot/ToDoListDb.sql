@@ -32,7 +32,7 @@ CREATE TABLE "ToDoItem"
 CREATE INDEX "idx_ToDoList_UserId" ON "ToDoList"("UserId");
 CREATE INDEX "idx_ToDoItem_UserId" ON "ToDoItem"("UserId");
 CREATE INDEX "idx_ToDoItem_ToDoListId" ON "ToDoItem"("ToDoListId");
-CREATE UNIQUE INDEX "idx_UX_ToDoUser_TelegramUserId" ON "ToDoUser"("TelegramUserId");
-CREATE UNIQUE INDEX "idx_UX_ToDoUser_ForeignId" ON "ToDoUser"("ForeignId");
-CREATE UNIQUE INDEX "idx_UX_ToDoList_ForeignId" ON "ToDoList"("ForeignId");
-CREATE UNIQUE INDEX "idx_UX_ToDoItem_ForeignId" ON "ToDoItem"("ForeignId");
+CREATE UNIQUE INDEX "UX_ToDoUser_TelegramUserId" ON "ToDoUser"("TelegramUserId");
+CREATE UNIQUE INDEX "UX_ToDoUser_ForeignId" ON "ToDoUser"("ForeignId");
+CREATE UNIQUE INDEX "UX_ToDoList_ForeignId" ON "ToDoList"("ForeignId");
+CREATE UNIQUE INDEX "UX_ToDoItem_ForeignId" ON "ToDoItem"("ForeignId");
