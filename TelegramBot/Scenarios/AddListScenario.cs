@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using Homeworks_otus.Core.Entities;
+﻿using Homeworks_otus.Core.Entities;
 using Homeworks_otus.TelegramBot.Core.DataAccess;
 using Homeworks_otus.TelegramBot.Core.Keyboard;
 using Homeworks_otus.TelegramBot.Core.Services;

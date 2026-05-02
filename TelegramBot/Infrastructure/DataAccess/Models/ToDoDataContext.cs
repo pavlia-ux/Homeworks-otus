@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using Homeworks_otus.Core.Entities;
-using Homeworks_otus.TelegramBot.Core.Entities;
+﻿using Homeworks_otus.TelegramBot.Core.DataAccess.Models;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -19,8 +12,8 @@ namespace Homeworks_otus.TelegramBot.Infrastructure.DataAccess
 
         }
 
-        public ITable<ToDoUser> ToDoUsers => this.GetTable<ToDoUser>();
-        public ITable<ToDoList> ToDoLists => this.GetTable<ToDoList>();
-        public ITable<ToDoItem> ToDoItems => this.GetTable<ToDoItem>();
+        public ITable<ToDoUserModel> ToDoUsers => this.GetTable<ToDoUserModel>();
+        public ITable<ToDoListModel> ToDoLists => this.GetTable<ToDoListModel>();
+        public ITable<ToDoItemModel> ToDoItems => this.GetTable<ToDoItemModel>();
     }
 }

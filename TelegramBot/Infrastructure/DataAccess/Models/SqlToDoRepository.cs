@@ -1,17 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-
-using Homeworks_otus.Core.DataAccess;
+﻿using Homeworks_otus.Core.DataAccess;
 using Homeworks_otus.Core.Entities;
 using Homeworks_otus.TelegramBot.Core.DataAccess;
 
 using LinqToDB;
 using LinqToDB.Async;
-using LinqToDB.Remote;
 
 using static Homeworks_otus.Core.Entities.ToDoItem;
 
@@ -19,124 +11,140 @@ namespace Homeworks_otus.TelegramBot.Infrastructure.DataAccess.Models
 {
     public class SqlToDoRepository : IToDoRepository
     {
-        private readonly DataContextFactory _factory;
+        private readonly IDataContextFactory<ToDoDataContext> _factory;
 
-        public SqlToDoRepository(DataContextFactory factory)
+        public SqlToDoRepository(IDataContextFactory<ToDoDataContext> factory)
         {
             _factory = factory;
         }
 
-        private async Task<List<ToDoItem>> GetTasks(Guid userId, CancellationToken ct)
+        public async Task<IReadOnlyList<ToDoItem>> GetAllByUserIdAsync(Guid userId, CancellationToken ct)
         {
             using var dbContext = _factory.CreateDataContext();
 
-            var tasks = await dbContext.ToDoItems
-                .Where(x => x.User.UserId == userId)
-                .LoadWith(x => x.User)
-                .LoadWith(x => x.List)
-                .LoadWith(x => x.List!.User)
-                .ToListAsync(ct);
+            var userModel = await dbContext.ToDoUsers.FirstAsync(u => u.ForeignId == userId, ct);
 
-            return ModelMapper.MapToModel(tasks);
-        }
+            if (userModel == null)
+                return Array.Empty<ToDoItem>();
 
-        public async Task<IReadOnlyList<ToDoItem>> GetAllByUserIdAsync(Guid userId, CancellationToken ct)
-        {
-            var tasks = await GetTasks(userId, ct);
-            return tasks.Where(x => x.User.UserId == userId).ToList();
+            var models = await AsyncExtensions.ToListAsync(dbContext.ToDoItems
+                .Where(i => i.UserId == userModel.Id)
+                .LoadWith(i => i.User)
+                .LoadWith(i => i.ToDoList), ct);
+            return models.Select(ModelMapper.MapFromModel).ToList();
         }
 
         public async Task<IReadOnlyList<ToDoItem>> GetActiveByUserIdAsync(Guid userId, CancellationToken ct)
         {
-            var tasks = await GetTasks(userId, ct);
-            return tasks.Where(x => x.User.UserId == userId && x.State == ToDoItemState.Active).ToList();
+            using var dbContext = _factory.CreateDataContext();
+
+            var userModel = await dbContext.ToDoUsers.FirstAsync(u => u.ForeignId == userId, ct);
+
+            if (userModel == null)
+                return Array.Empty<ToDoItem>();
+
+            var models = await AsyncExtensions.ToListAsync(dbContext.ToDoItems
+                .Where(i => i.UserId == userModel.Id && i.ToDoItemState == (int)ToDoItemState.Active)
+                .LoadWith(i => i.User)
+                .LoadWith(i => i.ToDoList), ct);
+
+            return models.Select(ModelMapper.MapFromModel).ToList();
         }
 
         public async Task<IReadOnlyList<ToDoItem>> GetCompletedByUserIdAsync(Guid userId, CancellationToken ct)
         {
-            var tasks = await GetTasks(userId, ct);
-            return tasks.Where(x => x.User.UserId == userId && x.State == ToDoItemState.Completed).ToList();
+            using var dbContext = _factory.CreateDataContext();
+
+            var userModel = await dbContext.ToDoUsers.FirstAsync(u => u.ForeignId == userId, ct);
+
+            if (userModel == null)
+                return Array.Empty<ToDoItem>();
+
+            var models = await AsyncExtensions.ToListAsync(dbContext.ToDoItems
+                .Where(i => i.UserId == userModel.Id && i.ToDoItemState == (int)ToDoItemState.Completed)
+                .LoadWith(i => i.User)
+                .LoadWith(i => i.ToDoList), ct);
+
+            return models.Select(ModelMapper.MapFromModel).ToList();
         }
 
         public async Task<IReadOnlyList<ToDoItem>> FindAsync(Guid userId, Func<ToDoItem, bool> predicate, CancellationToken ct)
         {
-            var tasks = await GetTasks(userId, ct);
-            return tasks.Where(x => x.User.UserId == userId && predicate(x)).ToList();
+            var items = await GetAllByUserIdAsync(userId, ct);
+            return items.Where(predicate).ToList();
         }
 
         public async Task<ToDoItem?> GetAsync(Guid id, CancellationToken ct)
         {
             using var dbContext = _factory.CreateDataContext();
 
-            // Поиск задачи по ID
-            var tasks = await dbContext.ToDoItems
-                .Where(x => x.Id == id)
-                .LoadWith(x => x.User)
-                .LoadWith(x => x.List)
-                .LoadWith(x => x.List!.User)
-                .FirstOrDefaultAsync(ct);
+            var model = await AsyncExtensions.FirstOrDefaultAsync(dbContext.ToDoItems
+                .LoadWith(i => i.User)
+                .LoadWith(i => i.ToDoList),
+                i => i.ForeignId == id, ct);
 
-            if (tasks == null)
-                throw new ArgumentException("Такой задачи нет");
-
-            return ModelMapper.MapToModel(tasks);
+            return model != null ? ModelMapper.MapFromModel(model) : null;
         }
 
         public async Task AddAsync(ToDoItem item, CancellationToken ct)
         {
             using var dbContext = _factory.CreateDataContext();
-
-            // Добавление новой задачи
-            dbContext.ToDoItems.Add(item);
-            await dbContext.SaveChangesAsync(ct);
+            var model = ModelMapper.MapToModel(item);
+            await dbContext.InsertAsync(model, token: ct);
         }
 
         public async Task UpdateAsync(ToDoItem item, CancellationToken ct)
         {
             using var dbContext = _factory.CreateDataContext();
 
-            // Проверяем, существует ли задача с таким ID
-            var existingItem = await dbContext.ToDoItems
-                .Where(x => x.Id == item.Id)
-                .FirstOrDefaultAsync(ct);
+            var model = await dbContext.ToDoItems
+                .FirstOrDefaultAsync(i => i.ForeignId == item.Id, ct);
 
-            if (existingItem == null)
+            if (model == null)
                 throw new ArgumentException("Такой задачи нет");
 
-            // Обновление данных задачи
-            existingItem.State = ToDoItemState.Completed;
-
-            dbContext.ToDoItems.Update(existingItem);
-            await dbContext.SaveChangesAsync(ct);
+            model.ToDoItemState = (int)ToDoItemState.Completed;
+            model.StateChangedAt = DateTime.UtcNow;
+            await dbContext.UpdateAsync(model, token: ct);
         }
 
         public async Task DeleteAsync(Guid id, CancellationToken ct)
         {
             using var dbContext = _factory.CreateDataContext();
 
-            // Проверяем, существует ли задача с таким ID
-            var tasks = await dbContext.ToDoItems
-                .Where(x => x.Id == id)
-                .FirstOrDefaultAsync(ct);
+            var model = await dbContext.ToDoItems
+                .FirstOrDefaultAsync(i => i.ForeignId == id, ct);
 
-            if (tasks == null)
+            if (model == null)
                 throw new ArgumentException("Такой задачи нет");
 
-            // Удаляем задачу
-            dbContext.ToDoItems.Remove(tasks);
-            await dbContext.SaveChangesAsync(ct);
+            await dbContext.DeleteAsync(model, token: ct);
         }
 
         public async Task<bool> ExistsByNameAsync(Guid userId, string name, CancellationToken ct)
         {
-            var tasks = await GetTasks(userId, ct);
-            return tasks.Any(x => x.User.UserId == userId && x.Name == name);
+            using var dbContext = _factory.CreateDataContext();
+
+            var userModel = await dbContext.ToDoUsers.FirstAsync(u => u.ForeignId == userId, ct);
+
+            if (userModel == null)
+                return false;
+
+            return await dbContext.ToDoItems
+                .AnyAsync(i => i.UserId == userModel.Id && i.ItemName == name, ct);
         }
 
         public async Task<int> CountActiveAsync(Guid userId, CancellationToken ct)
         {
-            var tasks = await GetTasks(userId, ct);
-            return tasks.Count(x => x.State == ToDoItemState.Active);
+            using var dbContext = _factory.CreateDataContext();
+
+            var userModel = await dbContext.ToDoUsers.FirstAsync(u => u.ForeignId == userId, ct);
+
+            if (userModel == null)
+                return 0;
+
+            return await dbContext.ToDoItems
+                .CountAsync(i => i.UserId == userModel.Id && i.ToDoItemState == (int)ToDoItemState.Active, ct);
         }
     }
 }

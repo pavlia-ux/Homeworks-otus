@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using Homeworks_otus.Core.DataAccess;
+﻿using Homeworks_otus.Core.DataAccess;
 using Homeworks_otus.Core.Entities;
 using Homeworks_otus.Core.Exceptions;
 using Homeworks_otus.TelegramBot.Core.Entities;
@@ -40,7 +34,7 @@ namespace Homeworks_otus.Core.Services
         {
             return await _toDoRepository.FindAsync(userId, item => item.Name.StartsWith(namePrefix), ct);
         }
-        public async Task<ToDoItem> AddAsync(ToDoUser user, string name, DateTime deadLine, ToDoList? list, CancellationToken ct)
+        public async Task<ToDoItem> AddAsync(ToDoUser user, string name, DateTime deadLine, ToDoList? toDolist, CancellationToken ct)
         {
             ToDoItem toDoItem = new ToDoItem()
             {
@@ -48,10 +42,10 @@ namespace Homeworks_otus.Core.Services
                 User = user,
                 Name = name,
                 CreatedAt = DateTime.UtcNow,
-                State = Entities.Enums.ToDoItemState.Active,
+                State = ToDoItem.ToDoItemState.Active,
                 DeadLine = deadLine,
-                ToDoList = toDoList,
-                ToDoListDatabaseId = toDoList.DatabaseId,
+                ToDoList = toDolist,
+                ToDoListDatabaseId = toDolist.DatabaseId,
                 UserDatabaseId = user.DatabaseId,
                 UserId = user.UserId
             };
@@ -114,7 +108,7 @@ namespace Homeworks_otus.Core.Services
             List<ToDoItem> toDoList = new List<ToDoItem>();
             foreach (ToDoItem task in await _toDoRepository.GetAllByUserIdAsync(userId, ct))
             {
-                if (task.List != null && task.List.Id == listId)
+                if (task.ToDoList != null && task.ToDoList.Id == listId)
                     toDoList.Add(task);
             }
             return toDoList;
