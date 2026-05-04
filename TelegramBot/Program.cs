@@ -14,7 +14,6 @@ namespace Homeworks_otus
 {
     internal class Program
     {
-        // Get token from environment variable
         private static string _botKey = Environment.GetEnvironmentVariable("TELEGRAM_BOT_TOKEN", EnvironmentVariableTarget.User);
         const string connectionString = "host=127.0.0.1; port=5432; Database=CinemaProjectDB; Username=postgres; password=123; Timeout=10; sslmode=prefer;";
 
