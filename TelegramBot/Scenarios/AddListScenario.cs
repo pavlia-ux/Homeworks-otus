@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using Homeworks_otus.Core.Entities;
+﻿using Homeworks_otus.Core.Entities;
 using Homeworks_otus.TelegramBot.Core.DataAccess;
 using Homeworks_otus.TelegramBot.Core.Keyboard;
 using Homeworks_otus.TelegramBot.Core.Services;
@@ -38,7 +31,7 @@ namespace Homeworks_otus.TelegramBot.Scenarios
             switch (context.CurrentStep)
             {
                 case null:
-                    ToDoUser user = await _userService.GetUserByTelegramUserIdAsync(message.From.Id, ct);
+                    ToDoUser user = await _userService.GetUserByTelegramUserIdAsync(long.Parse(context.Data["TelegramUserId"].ToString()), ct);
                     context.Data.Add("User", user);
                     await botClient.SendMessage(message.Chat, "Введите название списка", replyMarkup: ReplyKeyboard.SetStandardListButton(), cancellationToken: ct);
                     context.CurrentStep = "Name";

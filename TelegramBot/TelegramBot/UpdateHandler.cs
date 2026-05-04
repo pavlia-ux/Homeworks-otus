@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 
 using Homeworks_otus.Core.Entities;
 using Homeworks_otus.Core.Exceptions;
@@ -140,6 +138,7 @@ namespace Homeworks_otus.Core.Services
                     if (await IsRegistered(botClient, update.Message, ct))
                     {
                         context = new ScenarioContext(ScenarioType.AddTask);
+                        context.Data.Add("TelegramUserId", update.Message.From.Id);
                         await _scenarioContextRepository.SetContext(update.Message.From.Id, context, ct);
                         await ProcessScenario(botClient, context, update.Message.From, update.Message, ct);
                     }
@@ -184,11 +183,13 @@ namespace Homeworks_otus.Core.Services
                 case CallbackQuery a when a.Data == "addlist":
                     context = new ScenarioContext(ScenarioType.AddList);
                     await _scenarioContextRepository.SetContext(update.CallbackQuery.From.Id, context, ct);
+                    context.Data.Add("TelegramUserId", update.CallbackQuery.From.Id);
                     await ProcessScenario(botClient, context, update.CallbackQuery.From, update.CallbackQuery.Message, ct);
                     break;
                 case CallbackQuery a when a.Data == "deletelist":
                     context = new ScenarioContext(ScenarioType.DeleteList);
                     await _scenarioContextRepository.SetContext(update.CallbackQuery.From.Id, context, ct);
+                    context.Data.Add("TelegramUserId", update.CallbackQuery.From.Id);
                     await ProcessScenario(botClient, context, update.CallbackQuery.From, update.CallbackQuery.Message, ct);
                     break;
                 case CallbackQuery a when a.Data.StartsWith("show"):
@@ -243,6 +244,7 @@ namespace Homeworks_otus.Core.Services
                 case CallbackQuery a when a.Data.StartsWith("deletetask"):
                     context = new ScenarioContext(ScenarioType.DeleteTask);
                     context.Data.Add("Callback", ToDoItemCallbackDto.FromString(a.Data).ToString());
+                    context.Data.Add("TelegramUserId", update.CallbackQuery.From.Id);
                     await _scenarioContextRepository.SetContext(update.CallbackQuery.From.Id, context, ct);
                     await ProcessScenario(botClient, context, update.CallbackQuery.From, update.CallbackQuery.Message, ct);
                     ToDoItemCallbackDto tdo2 = ToDoItemCallbackDto.FromString(a.Data);

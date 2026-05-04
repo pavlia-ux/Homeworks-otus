@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-
-using Homeworks_otus.Core.Services;
+﻿using Homeworks_otus.Core.Services;
 using Homeworks_otus.TelegramBot.Core.DataAccess;
 using Homeworks_otus.TelegramBot.Core.Services;
 using Homeworks_otus.TelegramBot.Infrastructure.DataAccess;
+using Homeworks_otus.TelegramBot.Infrastructure.DataAccess.Models;
 using Homeworks_otus.TelegramBot.Scenarios;
 
 using Telegram.Bot;
@@ -19,6 +16,7 @@ namespace Homeworks_otus
     {
         // Get token from environment variable
         private static string _botKey = Environment.GetEnvironmentVariable("TELEGRAM_BOT_TOKEN", EnvironmentVariableTarget.User);
+        const string connectionString = "host=127.0.0.1; port=5432; Database=CinemaProjectDB; Username=postgres; password=123; Timeout=10; sslmode=prefer;";
 
         private static async Task Main(string[] args)
         {
@@ -28,12 +26,12 @@ namespace Homeworks_otus
 
                 DirectoryIndexes.Initialize(directoryName);
 
-                var fileUserRepository = new FileUserRepository(directoryName);
-                var fileToDoRepository = new FileToDoRepository(directoryName);
-                var fileToDoListRepository = new FileToDoListRepository(directoryName);
-                var userService = new UserService(fileUserRepository);
-                var toDoService = new ToDoService(fileToDoRepository);
-                var toDoListService = new ToDoListService(fileToDoListRepository);
+                var userRepository = new SqlUserRepository(new DataContextFactory(connectionString));
+                var toDoRepository = new SqlToDoRepository(new DataContextFactory(connectionString)); 
+                var toDoListRepository = new SqlToDoListRepository(new DataContextFactory(connectionString));
+                var userService = new UserService(userRepository);
+                var toDoService = new ToDoService(toDoRepository);
+                var toDoListService = new ToDoListService(toDoListRepository);
                 var scenarios = new List<IScenario>()
                 {
                     new AddTaskScenario(userService, toDoListService, toDoService),

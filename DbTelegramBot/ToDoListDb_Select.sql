@@ -6,5 +6,5 @@ SELECT id, "ListName", "UserId", "ListCreatedAt"
 	FROM public."ToDoList";
 
 
-SELECT id, "UserId", "ItemName", "ItemCreatedAt", "DeadLine", "StateChangedAt", "ListId", "ToDoItemState"
+SELECT id, "UserId", "ItemName", "ItemCreatedAt", "DeadLine", "StateChangedAt", "ToDoListId", "ToDoItemState"
 	FROM public."ToDoItem";

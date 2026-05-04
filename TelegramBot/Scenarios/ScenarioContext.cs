@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using static Homeworks_otus.TelegramBot.Scenarios.ScenarioTypeClass;
+﻿using static Homeworks_otus.TelegramBot.Scenarios.ScenarioTypeClass;
 
 namespace Homeworks_otus.TelegramBot.Core.Services
 {

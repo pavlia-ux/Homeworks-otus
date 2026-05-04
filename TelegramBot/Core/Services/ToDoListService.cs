@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using Homeworks_otus.Core.Entities;
+﻿using Homeworks_otus.Core.Entities;
 using Homeworks_otus.Core.Exceptions;
 using Homeworks_otus.TelegramBot.Core.DataAccess;
 using Homeworks_otus.TelegramBot.Core.Entities;
@@ -26,7 +20,14 @@ namespace Homeworks_otus.TelegramBot.Core.Services
                 throw new ArgumentException("Размер имени списка не может быть больше 10 символов!");
             if (await _toDoListRepository.ExistsByName(user.UserId, name, ct))
                 throw new DuplicateTaskException(name);
-            ToDoList toDoList = new ToDoList(user, name);
+            ToDoList toDoList = new ToDoList()
+            {
+                Id = Guid.NewGuid(),
+                Name = name,
+                User = user,
+                CreatedAt = DateTime.UtcNow,
+                UserDatabaseId = user.DatabaseId
+            };
             await _toDoListRepository.Add(toDoList, ct);
             return toDoList;
         }
