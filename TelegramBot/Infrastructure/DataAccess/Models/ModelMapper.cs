@@ -1,6 +1,7 @@
 ﻿using Homeworks_otus.Core.Entities;
 using Homeworks_otus.TelegramBot.Core.DataAccess.Models;
 using Homeworks_otus.TelegramBot.Core.Entities;
+using Homeworks_otus.TelegramBot.Infrastructure.DataAccess.Models;
 
 using static Homeworks_otus.Core.Entities.ToDoItem;
 
@@ -107,6 +108,42 @@ namespace Homeworks_otus.TelegramBot.Infrastructure.DataAccess
                 ListName = entity.Name,
                 UserId = entity.UserDatabaseId ?? 0,
                 ListCreatedAt = entity.CreatedAt
+            };
+        }
+
+        public static Notification MapFromModel(NotificationModel model)
+        {
+            return new Notification
+            {
+                Id = model.ForeignId,
+                DatabaseId = model.Id,
+                User = new ToDoUser
+                {
+                    DatabaseId = model.User.Id,
+                    UserId = model.User.ForeignId,
+                    RegisteredAt = model.User.RegisteredAt,
+                    TelegramUserId = model.User.TelegramUserId,
+                    TelegramUserName = model.User.TelegramUserName
+                },
+                Type = model.Type,
+                Text = model.Text,
+                ScheduledAt = model.ScheduledAt,
+                IsNotified = model.IsNotified,
+                NotifiedAt = model.NotifiedAt
+            };
+        }
+
+        public static NotificationModel MapToModel(Notification entity)
+        {
+            return new NotificationModel
+            {
+                ForeignId = entity.Id,
+                UserId = entity.User?.DatabaseId ?? 0,
+                Type = entity.Type,
+                Text = entity.Text,
+                ScheduledAt = entity.ScheduledAt,
+                IsNotified = entity.IsNotified,
+                NotifiedAt = entity.NotifiedAt
             };
         }
     }

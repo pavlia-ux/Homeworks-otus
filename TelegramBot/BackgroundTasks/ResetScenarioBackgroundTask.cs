@@ -17,8 +17,7 @@ namespace Homeworks_otus.TelegramBot.BackgroundTasks
         private readonly IScenarioContextRepository _scenarioRepository;
         private readonly ITelegramBotClient _bot;
 
-        public ResetScenarioBackgroundTask(TimeSpan resetScenarioTimeout, IScenarioContextRepository scenarioRepository, ITelegramBotClient bot)
-            : base(resetScenarioTimeout, nameof(ResetScenarioBackgroundTask))
+        public ResetScenarioBackgroundTask(TimeSpan resetScenarioTimeout, IScenarioContextRepository scenarioRepository, ITelegramBotClient bot): base(resetScenarioTimeout, nameof(ResetScenarioBackgroundTask))
         {
             _resetScenarioTimeout = resetScenarioTimeout;
             _scenarioRepository = scenarioRepository;

@@ -46,6 +46,12 @@ namespace Homeworks_otus.TelegramBot.Infrastructure.DataAccess
             }
             return user;
         }
+
+        public Task<IReadOnlyList<ToDoUser>> GetAllUsers(CancellationToken ct)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task AddAsync(ToDoUser user, CancellationToken ct)
         {
             using (FileStream stream = File.Create(Path.Combine(_directoryName, $"{user.UserId}.json")))

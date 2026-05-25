@@ -32,6 +32,7 @@ namespace Homeworks_otus
                 var userService = new UserService(userRepository);
                 var toDoService = new ToDoService(toDoRepository);
                 var toDoListService = new ToDoListService(toDoListRepository);
+                var notificationServices = new NotificationService(new DataContextFactory(connectionString));
                 var scenarios = new List<IScenario>()
                 {
                     new AddTaskScenario(userService, toDoListService, toDoService),
@@ -49,6 +50,9 @@ namespace Homeworks_otus
                 var scenarioRepository = new InMemoryScenarioContextRepository();
                 var backgroundRunner = new BackgroundTaskRunner();
                 backgroundRunner.AddTask(new ResetScenarioBackgroundTask(TimeSpan.FromHours(1), scenarioRepository, botClient));
+                backgroundRunner.AddTask(new NotificationBackgroundTask(TimeSpan.FromMinutes(1), notificationServices, botClient));
+                backgroundRunner.AddTask(new DeadlineBackgroundTask(TimeSpan.FromHours(1), notificationServices, userRepository, toDoRepository));
+                backgroundRunner.AddTask(new TodayBackgroundTask(TimeSpan.FromDays(1), notificationServices, userRepository, toDoRepository));
                 backgroundRunner.StartTasks(cts.Token);
                 var handler = new UpdateHandler(userService, toDoService, new ToDoReportService(toDoService), toDoListService, scenarios, scenarioRepository);
                                                

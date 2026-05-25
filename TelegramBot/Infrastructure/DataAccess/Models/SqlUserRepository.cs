@@ -40,5 +40,12 @@ namespace Homeworks_otus.TelegramBot.Infrastructure.DataAccess.Models
 
             return model != null ? ModelMapper.MapFromModel(model) : null;
         }
+
+        public async Task<IReadOnlyList<ToDoUser>> GetAllUsers(CancellationToken ct)
+        {
+            using var dbContext = _factory.CreateDataContext();
+            var models = await dbContext.ToDoUsers.ToListAsync();
+            return models.Select(ModelMapper.MapFromModel).ToList();
+        }
     }
 }

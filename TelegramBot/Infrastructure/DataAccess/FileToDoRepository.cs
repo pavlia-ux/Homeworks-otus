@@ -38,6 +38,10 @@ namespace Homeworks_otus.TelegramBot.Infrastructure.DataAccess
         {
             return (await GetTasks(userId, ct)).Where(x => x.User.UserId == userId && x.State == ToDoItemState.Active).ToList();
         }
+        public Task<IReadOnlyList<ToDoItem>> GetActiveWithDeadline(Guid userId, DateTime from, DateTime to, CancellationToken ct)
+        {
+            throw new NotImplementedException();
+        }
         public async Task<IReadOnlyList<ToDoItem>> GetCompletedByUserIdAsync(Guid userId, CancellationToken ct)
         {
             return (await GetTasks(userId, ct)).Where(x => x.User.UserId == userId && x.State == ToDoItemState.Completed).ToList();
