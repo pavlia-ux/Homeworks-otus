@@ -15,6 +15,12 @@ namespace Homeworks_otus.TelegramBot.Infrastructure.DataAccess
             return null;
         }
 
+        public async Task<IReadOnlyList<KeyValuePair<long, ScenarioContext>>> GetContexts(CancellationToken ct)
+        {
+            var contexts = _context.ToList();
+            return contexts;
+        }
+
         public async Task ResetContext(long userId, CancellationToken ct)
         {
             if (_context.ContainsKey(userId))
