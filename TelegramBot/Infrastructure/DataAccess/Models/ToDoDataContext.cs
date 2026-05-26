@@ -1,4 +1,5 @@
 ﻿using Homeworks_otus.TelegramBot.Core.DataAccess.Models;
+using Homeworks_otus.TelegramBot.Infrastructure.DataAccess.Models;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -15,5 +16,6 @@ namespace Homeworks_otus.TelegramBot.Infrastructure.DataAccess
         public ITable<ToDoUserModel> ToDoUsers => this.GetTable<ToDoUserModel>();
         public ITable<ToDoListModel> ToDoLists => this.GetTable<ToDoListModel>();
         public ITable<ToDoItemModel> ToDoItems => this.GetTable<ToDoItemModel>();
+        public ITable<NotificationModel> Notifications => this.GetTable<NotificationModel>();
     }
 }

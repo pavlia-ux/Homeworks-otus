@@ -51,6 +51,17 @@ namespace Homeworks_otus.TelegramBot.Infrastructure.DataAccess.Models
             return models.Select(ModelMapper.MapFromModel).ToList();
         }
 
+        public async Task<IReadOnlyList<ToDoItem>> GetActiveWithDeadline(Guid userId, DateTime from, DateTime to, CancellationToken ct)
+        {
+            using var dbContext = _factory.CreateDataContext();
+            var user = await dbContext.ToDoUsers.FirstOrDefaultAsync(u => u.ForeignId == userId);
+            var models = await AsyncExtensions.ToListAsync(dbContext.ToDoItems
+                .Where(t => t.UserId == user.Id && t.ToDoItemState == (int)ToDoItemState.Active && (t.DeadLine >= from && t.DeadLine < to))
+                .LoadWith(t => t.User)
+                .LoadWith(t => t.ToDoList));
+            return models.Select(ModelMapper.MapFromModel).ToList();
+        }
+
         public async Task<IReadOnlyList<ToDoItem>> GetCompletedByUserIdAsync(Guid userId, CancellationToken ct)
         {
             using var dbContext = _factory.CreateDataContext();
